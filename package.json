@@ -1,0 +1,19 @@
+{
+  "name": "nko3-something-clever",
+  "version": "0.0.0",
+  "description": "something clever",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:nko3/something-clever.git"
+  },
+  "dependencies": {
+  },
+  "engines": {
+    "node": "0.8.x"
+  },
+  "subdomain": "something-clever.nko3"
+}
