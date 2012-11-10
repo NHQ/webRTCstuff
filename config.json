@@ -1,0 +1,16 @@
+{
+  "dev":{
+    "cache":"lru",
+    "lru":{}
+  },
+  "production":{
+    "cache":"redis",
+    "redis":{
+      "name":"sessions"
+      ,"host":"nodejitsudb5785241690.redis.irstack.com"
+      ,"port":6379
+      ,"auth":"nodejitsudb5785241690.redis.irstack.com:f327cfe980c971946e80b8e975fbebb4"
+    }
+  }
+}
+
