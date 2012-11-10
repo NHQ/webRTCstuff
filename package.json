@@ -21,7 +21,8 @@
     "oppressor": "*",
     "node-uuid":"*",
     "mime":"~1.2.7",
-    "knox":"~0.4.1"
+    "knox":"~0.4.1",
+    "nano":"~3.3.3"
   },
   "devDependencies":{
     "tap":"*",

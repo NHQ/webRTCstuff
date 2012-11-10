@@ -1,7 +1,12 @@
 {
   "dev":{
     "cache":"lru",
-    "lru":{}
+    "lru":{},
+    "db":false
+    "files":"file"
+    "file":{
+      "dir":"/tmp"
+    }
   },
   "production":{
     "cache":"redis",
@@ -10,6 +15,16 @@
       ,"host":"nodejitsudb5785241690.redis.irstack.com"
       ,"port":6379
       ,"auth":"nodejitsudb5785241690.redis.irstack.com:f327cfe980c971946e80b8e975fbebb4"
+    },
+    "db":"couch",
+    "couch":{
+      "url":"http://nodejitsudb3751794886.iriscouch.com:5984"
+    },
+    "files":"s3",
+    "s3":{
+      "key":"AKIAINA42N45LTMLGGIQ",
+      "secret":"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",
+      "bucket":"somethingclever"
     }
   }
 }
