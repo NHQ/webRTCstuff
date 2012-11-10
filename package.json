@@ -17,7 +17,11 @@
     "browserify": "*",
     "socket.io": "*",
     "confuse": "*",
-    "oppressor": "*"
+    "oppressor": "*",
+    "node-uuid":"*"
+  },
+  "devDependencies":{
+    "tap":"*"
   },
   "engines": {
     "node": "0.8.x"
