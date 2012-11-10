@@ -38,15 +38,14 @@ module.exports = function(config){
     // add the bundle 
     //
     app.route('/client.js',function(req,res){
-      var out = bundle('app.js') 
+      var out = bundle('app.js','client/app.js') 
       var oppress = oppressor(req);
       oppress.pipe(res);
       oppress.end(out);
-
     });
 
     app.route('/media.js',function(req,res){
-      var out = bundle('media.js') 
+      var out = bundle('media.js','media.js') 
       var oppress = oppressor(req);
       oppress.pipe(res);
       oppress.end(out);
@@ -106,7 +105,7 @@ module.exports = function(config){
 }
 
 
-function bundle(js,config){
+function bundle(js,module,config){
   config = config||{};
   if(!bundle.bundles) bundle.bundles = {};
   var out = bundle.bundles[js];
@@ -115,7 +114,7 @@ function bundle(js,config){
     var b = browserify()
     b.require(__dirname+'/client/'+js);
     out = b.bundle();
-    out += ";require('./client/"+js+"')("+JSON.stringify(config.client||{})+");";
+    out += ";require('./"+module+"')("+JSON.stringify(config.client||{})+");";
     bundle.bundles[js] = out;
   }
   return out; 
