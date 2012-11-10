@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+<head>
+</head>
+<body>
+<audio id="sound" ></audio>
+<video id="vid" autoplay="autoplay"></video>
+
+</body>
+
+<script type="text/javascript">
+var el = document.getElementById('sound');
+var vid = document.getElementById('vid'); 
+var audio = new webkitAudioContext();
+var js = audio.createJavaScriptNode(1024);
+js.connect(audio.destination);
+//var media = audio.createMediaElementSource(el);
+//media.connect(audio.destination);
+
+js.onaudioprocess = function(obj){
+    var buf = obj.outputBuffer.getChannelData(1) // obj.inputBuffer.getChannelData(1)
+    var buf2 = obj.inputBuffer.getChannelData(1);
+	var x;
+	for(x = 0; x < buf.length; x++){
+		buf[x] = buf2[x]
+	}
+//	console.log(buf2);
+}
+js.connect(audio.destination)
+
+window.URL = window.URL || window.webkitURL;
+navigator.getUserMedia  = navigator.getUserMedia || navigator.webkitGetUserMedia ||
+                          navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+function convertToMono( input ) {
+    var splitter = audio.createChannelSplitter(2);
+    var merger = audio.createChannelMerger(2);
+
+    input.connect( splitter );
+    splitter.connect( merger, 0, 0 );
+    splitter.connect( merger, 0, 1 );
+    return merger;
+}
+
+function gotStream(stream) {
+    // Create an AudioNode from the stream.
+//    realAudioInput = audioContext.createMediaStreamSource(stream);
+    var input = audio.createMediaStreamSource(stream);
+    var url = webkitURL.createObjectURL(stream);
+    vid.src = url;
+
+/*
+    realAudioInput = audioContext.createBiquadFilter();
+    realAudioInput.frequency.value = 60.0;
+    realAudioInput.type = realAudioInput.NOTCH;
+    realAudioInput.Q = 10.0;
+
+    input.connect( realAudioInput );
+*/
+    audioInput = convertToMono( input );
+
+    audioInput.connect(js);
+}
+
+if (!navigator.webkitGetUserMedia)
+        return(alert("Error: getUserMedia not supported!"));
+
+    navigator.webkitGetUserMedia({audio:true, video: true}, gotStream, function(e) {
+            alert('Error getting audio');
+            console.log(e);
+        });
+/*
+if (navigator.getUserMedia) {
+  navigator.getUserMedia({video: true, audio: true}, function(stream) {
+    var url = webkitURL.createObjectURL(stream);
+    vid.src = url;
+  }, onFailSoHard);
+} else {
+}
+*/
+</script>
+</html>
