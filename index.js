@@ -63,7 +63,7 @@ function bundle(js,config){
     var b = browserify()
     b.require(__dirname+'/client/'+js);
     out = b.bundle();
-    out += ";require('./'"+js+")("+JSON.stringify(config.client||{})+");";
+    out += ";require('./"+js+"')("+JSON.stringify(config.client||{})+");";
     bundle.bundles[js] = out;
   }
   return out; 
