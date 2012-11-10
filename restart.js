@@ -2,7 +2,7 @@ var watch = require('watch');
 var fork = require('child_process').fork;
 var cp;
 
-var exts = ['js','css','json','html','ejs','csv','styl'];
+var exts = ['js','css','json','html'];
 
 function add(){
   if(cp) return;

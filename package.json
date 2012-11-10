@@ -4,7 +4,8 @@
   "description": "something clever",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "test":"tap test/*"
   },
   "repository": {
     "type": "git",
@@ -18,7 +19,9 @@
     "socket.io": "*",
     "confuse": "*",
     "oppressor": "*",
-    "node-uuid":"*"
+    "node-uuid":"*",
+    "mime":"~1.2.7",
+    "knox":"~0.4.1"
   },
   "devDependencies":{
     "tap":"*",
