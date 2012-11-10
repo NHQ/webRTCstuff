@@ -7,7 +7,7 @@ var  tako = require('tako')
 
 
 
-module.exports = function(config,ready){
+module.exports = function(config){
   config = config||{};
 
   // 
@@ -32,9 +32,9 @@ module.exports = function(config,ready){
   //
   app.route('/client.js',function(req,res){
     var b = browserify()
-    b.require(__dirname+'/browser/app.js');
+    b.require(__dirname+'/client/app.js');
     out = b.bundle();
-    out += ";require('./app.js')("+JSON.stringify(config.browser||{})+");";
+    out += ";require('./app.js')("+JSON.stringify(config.client||{})+");";
 
     // uglify it up.
     if(bundleKey == 'min') {
