@@ -3,6 +3,7 @@ var  tako = require('tako')
 , packagejson = require('./package.json')
 , oppressor = require('oppressor')
 , path = require('path')
+, fs = require('fs')
 , EventEmitter = require('events').EventEmitter
 ;
 
@@ -14,11 +15,12 @@ module.exports = function(config){
   
   config = config||{};
 
+  // 
+  // create tako
+  //
+  var app = tako()
+
   em.routes = function(){
-    // 
-    // create tako
-    //
-    var app = tako()
 
     //
     // static content
@@ -28,9 +30,8 @@ module.exports = function(config){
     //
     // shim fake index
     //
-    app.route('/',function(req,res){
-      res.end('yo yo homies');
-    });
+    var index = fs.readFileSync('./static/index.html');
+    app.route('/').html(index);
 
     //
     // add the bundle 
@@ -53,12 +54,47 @@ module.exports = function(config){
     app.route('/package').json(JSON.stringify(packagejson)+"\n");
   };
 
+  em.sockets = {};
+  
+  em.sockets = function(){
+    var z = this;
+    z.app.sockets.manager.settings['log level'] = 2; 
+    z.app.sockets.on('connection',function(socket){
+      console.log('client connected! ',socket.id);
+
+      z.sockets[socket.id] = socket;
+      
+      socket.on('disconnect',function(){
+        z.emit('disconnect',socket.id);
+        delete z.sockets[socket.id];
+      });
+
+      // who am i.
+      socket.emit('id',id);
+
+      z.emit('connection',socket);
+    });
+  };
+
+  em.observeSelf = function(){
+    var z = this;
+    z.on('disconnect',function(){
+      //z.app.socketsbroadcast('logout')
+      console.log('socket disconnected');
+    });
+  };
+
+  //
+  // listen. 
+  //
   em.listen = function(port,cb){
     app.httpServer.listen(port,cb);
   };
 
   em.app = app;
+  em.observeSelf();
   em.routes();
+  em.sockets();
 
   return em;
 }
