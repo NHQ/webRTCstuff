@@ -5,6 +5,7 @@ var  tako = require('tako')
 , path = require('path')
 , fs = require('fs')
 , EventEmitter = require('events').EventEmitter
+, model = require('./lib/models')
 ;
 
 
@@ -54,23 +55,28 @@ module.exports = function(config){
     app.route('/package').json(JSON.stringify(packagejson)+"\n");
   };
 
-  em.sockets = {};
-  
+  em._sockets = {};
+  em._rooms = model('rooms');
+
   em.sockets = function(){
     var z = this;
     z.app.sockets.manager.settings['log level'] = 2; 
     z.app.sockets.on('connection',function(socket){
       console.log('client connected! ',socket.id);
 
-      z.sockets[socket.id] = socket;
-      
+      // new socket object.
+      z._sockets[socket.id] = model('socket',{socket:socket});
+      // new member object.
+      z._sockets[socket.id].set('member',model('member'));
+      z._sockets[socket.id].save(function(data){
+        // who am i.
+        socket.emit('id',data.id);
+      });
+
       socket.on('disconnect',function(){
         z.emit('disconnect',socket.id);
         delete z.sockets[socket.id];
       });
-
-      // who am i.
-      socket.emit('id',id);
 
       z.emit('connection',socket);
     });
