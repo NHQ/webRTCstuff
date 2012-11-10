@@ -21,7 +21,8 @@
     "node-uuid":"*"
   },
   "devDependencies":{
-    "tap":"*"
+    "tap":"*",
+    "watch":"*"
   },
   "engines": {
     "node": "0.8.x"

@@ -46,7 +46,7 @@ module.exports = function(config){
     });
 
     app.route('/media.js',function(req,res){
-      var out = bundle('media') 
+      var out = bundle('media/index.js') 
       var oppress = oppressor(req);
       oppress.pipe(res);
       oppress.end(out);
@@ -78,7 +78,7 @@ module.exports = function(config){
         delete z.sockets[socket.id];
       });
 
-      z.emit('connection',socket);
+      z.emit('connection',z._sockets[socket.id]);
     });
   };
 
@@ -115,7 +115,7 @@ function bundle(js,config){
     var b = browserify()
     b.require(__dirname+'/client/'+js);
     out = b.bundle();
-    out += ";require('./"+js+"')("+JSON.stringify(config.client||{})+");";
+    out += ";require('./client/"+js+"')("+JSON.stringify(config.client||{})+");";
     bundle.bundles[js] = out;
   }
   return out; 
