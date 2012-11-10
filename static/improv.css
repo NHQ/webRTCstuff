@@ -1,0 +1,31 @@
+body, div, p, video, img, audio, h1, h2, h3, h4, a {
+  margin: 0;
+  padding: 0
+}
+
+#director, #viewer, #player {
+  border: 1px solid black;
+  display: block
+} 
+
+.bigscreen {
+  border: 5px;
+  width: 100%
+}
+
+.onair {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  width: 100px;
+  height: 100px;
+  border-radis: 50px;
+}
+
+.red {
+  background-color: rgba(210, 20, 25, 1)
+}
+
+.green {
+  background-color: rgba(20, 210, 25, 1)
+}
