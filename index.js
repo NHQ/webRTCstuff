@@ -46,7 +46,7 @@ module.exports = function(config){
     });
 
     app.route('/media.js',function(req,res){
-      var out = bundle('media/index.js') 
+      var out = bundle('media.js') 
       var oppress = oppressor(req);
       oppress.pipe(res);
       oppress.end(out);
@@ -115,7 +115,7 @@ function bundle(js,config){
     var b = browserify()
     b.require(__dirname+'/client/'+js);
     out = b.bundle();
-    out += ";require('./client/"+js+"')("+JSON.stringify(config.client||{})+");";
+    out += ";require('./"+js+"')("+JSON.stringify(config.client||{})+");";
     bundle.bundles[js] = out;
   }
   return out; 
