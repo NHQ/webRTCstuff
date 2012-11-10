@@ -1,7 +1,7 @@
 var  tako = require('tako')
 , browserify = require('browserify')
 , packagejson = require('./package.json')
-, opressor = require('oppressor')
+, oppressor = require('oppressor')
 , path = require('path')
 ;
 
@@ -35,13 +35,6 @@ module.exports = function(config){
     b.require(__dirname+'/client/app.js');
     out = b.bundle();
     out += ";require('./app.js')("+JSON.stringify(config.client||{})+");";
-
-    // uglify it up.
-    if(bundleKey == 'min') {
-      out = uglify(out);
-    }
-    bundle[bundleKey] = out;
-   
     
     var oppress = oppressor(req);
     oppress.pipe(res);
