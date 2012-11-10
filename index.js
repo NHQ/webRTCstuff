@@ -3,55 +3,64 @@ var  tako = require('tako')
 , packagejson = require('./package.json')
 , oppressor = require('oppressor')
 , path = require('path')
+, EventEmitter = require('events').EventEmitter
 ;
 
 
 
 module.exports = function(config){
+
+  var em = new EventEmitter();
+  
   config = config||{};
 
-  // 
-  // create tako
-  //
-  var app = tako()
+  em.routes = function(){
+    // 
+    // create tako
+    //
+    var app = tako()
 
-  //
-  // static content
-  //
-  app.route('/static/*').files(path.join(__dirname, 'static'));
+    //
+    // static content
+    //
+    app.route('/static/*').files(path.join(__dirname, 'static'));
 
-  //
-  // shim fake index
-  //
-  app.route('/',function(req,res){
-    res.end('yo yo homies');
-  });
+    //
+    // shim fake index
+    //
+    app.route('/',function(req,res){
+      res.end('yo yo homies');
+    });
 
-  //
-  // add the bundle 
-  //
-  app.route('/client.js',function(req,res){
-    var out = bundle('app.js') 
-    var oppress = oppressor(req);
-    oppress.pipe(res);
-    oppress.end(out);
+    //
+    // add the bundle 
+    //
+    app.route('/client.js',function(req,res){
+      var out = bundle('app.js') 
+      var oppress = oppressor(req);
+      oppress.pipe(res);
+      oppress.end(out);
 
-  });
+    });
 
-  app.route('/media.js',function(req,res){
-    var out = bundle('media') 
-    var oppress = oppressor(req);
-    oppress.pipe(res);
-    oppress.end(out);
-  });
+    app.route('/media.js',function(req,res){
+      var out = bundle('media') 
+      var oppress = oppressor(req);
+      oppress.pipe(res);
+      oppress.end(out);
+    });
 
-  app.route('/package').json(JSON.stringify(packagejson)+"\n");
+    app.route('/package').json(JSON.stringify(packagejson)+"\n");
+  };
 
+  em.listen = function(port,cb){
+    app.httpServer.listen(port,cb);
+  };
 
-  //
-  //return unbound app
-  //
-  return app;
+  em.app = app;
+  em.routes();
+
+  return em;
 }
 
 

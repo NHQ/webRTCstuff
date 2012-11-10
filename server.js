@@ -5,7 +5,7 @@ var port = config.port||process.env.PORT||8000;
 
 console.log(config);
 
-app.httpServer.listen(port,function(){
+app.listen(port,function(){
   console.log('server is listening. woooo! ',port);
 });
 
