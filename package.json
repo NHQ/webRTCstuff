@@ -1,6 +1,6 @@
 {
   "name": "nko3-something-clever",
-  "version": "0.0.0",
+  "version": "0.0.0-2",
   "description": "something clever",
   "main": "server.js",
   "scripts": {
@@ -11,6 +11,13 @@
     "url": "git@github.com:nko3/something-clever.git"
   },
   "dependencies": {
+    "tako":"*",
+    "templar":"*",
+    "ejs":"*",
+    "browserify":"*",
+    "socket.io":"*",
+    "confuse":"*",
+    "oppressor":"*"
   },
   "engines": {
     "node": "0.8.x"
