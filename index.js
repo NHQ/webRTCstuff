@@ -31,20 +31,41 @@ module.exports = function(config){
   // add the bundle 
   //
   app.route('/client.js',function(req,res){
-    var b = browserify()
-    b.require(__dirname+'/client/app.js');
-    out = b.bundle();
-    out += ";require('./app.js')("+JSON.stringify(config.client||{})+");";
-    
+    var out = bundle('app.js') 
     var oppress = oppressor(req);
     oppress.pipe(res);
     oppress.end(out);
-  });  
+
+  });
+
+  app.route('/media.js',function(req,res){
+    var out = bundle('media') 
+    var oppress = oppressor(req);
+    oppress.pipe(res);
+    oppress.end(out);
+  });
 
   app.route('/package').json(JSON.stringify(packagejson)+"\n");
+
 
   //
   //return unbound app
   //
   return app;
+}
+
+
+function bundle(js,config){
+  config = config||{};
+  if(!bundle.bundles) bundle.bundles = {};
+  var out = bundle.bundles[js];
+  if(!out){
+    out = '';
+    var b = browserify()
+    b.require(__dirname+'/client/'+js);
+    out = b.bundle();
+    out += ";require('./"+js+"')("+JSON.stringify(config.client||{})+");";
+    bundle.bundles[js] = out;
+  }
+  return out; 
 }
