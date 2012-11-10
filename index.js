@@ -68,7 +68,7 @@ module.exports = function(config){
       z._sockets[socket.id] = model('socket',{socket:socket});
       // new member object.
       z._sockets[socket.id].set('member',model('member'));
-      z._sockets[socket.id].save(function(data){
+      z._sockets[socket.id].save(function(err,data){
         // who am i.
         socket.emit('id',data.id);
       });
