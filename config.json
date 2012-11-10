@@ -1,10 +1,10 @@
 {
   "dev":{
-    "cache":"lru",
-    "lru":{},
-    "db":false
-    "files":"file"
-    "file":{
+    "cache":"lru"
+    ,"lru":{}
+    ,"db":false
+    ,"files":"file"
+    ,"file":{
       "dir":"/tmp"
     }
   },
