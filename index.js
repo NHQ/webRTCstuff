@@ -77,7 +77,55 @@ module.exports = function(config){
         delete z.sockets[socket.id];
       });
 
+      socket.on('createroom',function(data,cb){
+        var room = model('room',data);
+        room.set('director',z._sockets[socket.id].id);
+        room.set('members',[z._sockets[socket.id].id]);
+        room.save(function(err,data){
+          // generates id. not really persisted yet.
+          if(cb) cb(err,data);
+          if(!err) z._rooms.push('rooms',room);
+
+        });
+      });
+
       z.emit('connection',z._sockets[socket.id]);
+    });
+  };
+
+  em.observeRooms = function(){
+    var z = this;
+    z._rooms.on('push',function(key,data,values){
+      if(key == 'rooms') {
+        
+        // remove director from any current rooms.
+        // emit data to
+        values.forEach(function(room){
+          if(room.get('id') === data.get('id')) return;
+          if(room.get('director') === data.get('director')) {
+            // if my director has joined another room i have to make another member the director or deactivate the room.
+            var members = room.get('members');
+            var director;
+            members.forEach(function(id,i){
+              if(id === data.get('id')) director = i
+            });
+
+            if(director !== undefined) {
+              members.splice(i,1);
+              //EMIT MEMBERS
+              room.set('members',members);
+            }
+            //EMIT DIRECTOR
+            room.set('director',members[0]);
+            room.save();//
+          }
+        });
+
+        // EMIT THE NEW ROOM
+        z.sockets.emit('room',room.getData());
+        
+      }
+      
     });
   };
 
@@ -98,6 +146,7 @@ module.exports = function(config){
 
   em.app = app;
   em.observeSelf();
+  em.observeRooms();
   em.routes();
   em.sockets();
 
