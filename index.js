@@ -5,8 +5,10 @@ var  tako = require('tako')
 , path = require('path')
 , fs = require('fs')
 , EventEmitter = require('events').EventEmitter
+, persist = require('./lib/persist')()
 , model = require('./lib/models')
 , changesbus = require('./lib/changesbus')
+, cookie = require('cookie')
 ;
 
 
@@ -61,11 +63,18 @@ module.exports = function(config){
   em.sockets = function(){
     var z = this;
     z.app.sockets.manager.settings['log level'] = 2; 
+    z.app.sockets.manager.settings['authorization'] = function(data,cb){
+      console.log('handshake data ',data);
+      cb(null,true);
+    }; 
+
     z.app.sockets.on('connection', function(socket) {
 
       z._sockets[socket.id] = model('socket',{socket:socket});
       z._sockets[socket.id].set('member', model('member'));
       z._sockets[socket.id].save(function(err,data) {
+        console.log('emitting the ')
+
         socket.emit('id', data.id);
         // Prompt them to join a room.
         if(!z._sockets[socket.id].get('room')) {
@@ -93,6 +102,11 @@ module.exports = function(config){
         }
 
         delete z._sockets[socket.id];
+      });
+
+      socket.on('get_rooms',function(cb){
+        if(!cb || !cb.call) return;
+        
       });
 
       socket.on('create_room', function(data, cb) {
@@ -176,6 +190,13 @@ module.exports = function(config){
     });
   };
 
+  em.loadRooms = function(cb){
+    persist.getRooms(function(err,data){
+      em._rooms = data?data:model('rooms');
+      cb(err,data);
+    });
+  }
+
   //
   // listen. 
   //
@@ -186,10 +207,19 @@ module.exports = function(config){
   em.app = app;
   em.observeSelf();
   em.routes();
-  em.sockets();
 
+  em.loadRooms(function(){
+    console.log('loaded rooms.');
+    em.sockets();
+  });
+
+
+  // room inactive
+  // member left
+  // room changed
+  //
   changesbus.on('change',function(ev,model){
-    //console.log(ev,' on ',model.type,model.get('id'));
+    console.log(ev,' on ',model.type,model.get('id'));
   });
 
   return em;

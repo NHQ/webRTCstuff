@@ -24,7 +24,7 @@
     "nano": "~3.3.3",
     "domready": "~0.2.11",
     "underscore": "~1.4.2",
-    "semver": "~1.1.0"
+    "cookie": "*"
   },
   "devDependencies": {
     "tap": "*",
