@@ -179,10 +179,15 @@ module.exports = function(config){
         , newMemberId = z._sockets[socket.id].get('member').get('id')
         ;
 
+console.log('joining the room ',newMemberId);
+
         var gotRoom = function(room){
           console.log('gotRoom called with ',room);
           // Tell the current video server user about the new user, if that isn't the new user.
           var currentRoomServer = room.get('server');
+
+          console.log('CURRENT ROOOM SERVER ',currentRoomServer,newMemberId);
+
           if(currentRoomServer != newMemberId) {
             var roomServerSocket = z.getSocketBySocketMemberId(currentRoomServer);
             if(roomServerSocket !== null) {
@@ -191,9 +196,12 @@ module.exports = function(config){
           }
 
           // Let the new user know about everyone.
+          console.log('GET MEMBERS!!! ',room.get('members'));
+
           room.get('members').forEach(function(memberId) {
             var socket = z.getSocketBySocketMemberId(memberId);
             var soc = em._socketData(socket);
+            console.log('add_member',soc.member.id);
             socket.emit('add_member', {id:soc.member.id,socket:soc});
           });
 
@@ -210,7 +218,7 @@ module.exports = function(config){
 
           if(cb) cb(null,room);
         };
-
+console.log('I HAVE A ROOM');
         if(room) {
 
           room.push('members', newMemberId);
@@ -231,6 +239,7 @@ module.exports = function(config){
           gotRoom(room);
 
         } else {
+          console.log('im going ot create a room')
           z.createRoom(socket, {title:data.title||data.name,description:data.description}, function(err,room){
 
             console.log('Added user to new room: ', room);
@@ -339,6 +348,9 @@ module.exports = function(config){
         socket = em._sockets[socketId];
       }
     }
+
+    console.log('found socket ',socket,'for member id ',socketMemberId);
+
     return socket;
   };
 

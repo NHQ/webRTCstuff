@@ -36,6 +36,11 @@
             localStream = null,
             currentRoom = 'chris';
 
+        socket.on('connected',function(data){
+          console.log('CONNECTED DATA',data);
+          currentRoom = (data.rooms[0]||{}).id
+        });
+
         /*
          * Members list.
          */
