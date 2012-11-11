@@ -67,26 +67,24 @@ module.exports = function(config){
     var z = this;
     z.app.sockets.manager.settings['log level'] = 2; 
     z.app.sockets.manager.settings['authorization'] = function(data,cb){
-      console.log('handshake data ',data);
 
       var memberid;
       if(data.headers.cookie){
         var cookies = cookie.parse(data.headers.cookie);
-        console.log('found cookies in auth ',cookies);
         memberid = cookies['clever-sid'];
       }
 
       persist.getMember(memberid,function(err,member){
-        if(err) console.log('PERSIST error getMemberById ',err);
+        if(err && err.status_code != 404) console.log('PERSIST error getMemberById ',err);
         if(member) {
           // can check if another socket is still this person
           data.member = member;
+          member.set('updated',Date.now());
           return cb(null,true);
         }
 
         member = model('member');
         member.save(function(err,model){
-          console.log('auth member save');
           if(err) return cb('sorry we had an issue generating a new membership',false)
 
           data.member = member;
@@ -357,8 +355,19 @@ module.exports = function(config){
   // member left
   // room changed
   //
+  var updating = {};
   changesbus.on('change',function(ev,model){
     console.log(ev,' on ',model.type,model.get('id'));
+    if(!model.dirty) return;
+
+    if(model.type == 'member') {
+      if(ev == 'set') {
+        persist.setMember(model,function(err,data){
+          // member was updated?
+          console.log('MEMBER persisted ',err,data);
+        });
+      }
+    }
   });
 
   return em;
