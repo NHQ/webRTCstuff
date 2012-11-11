@@ -62,78 +62,91 @@ module.exports = function(config){
     var z = this;
     z.app.sockets.manager.settings['log level'] = 2; 
     z.app.sockets.on('connection',function(socket){
-      console.log('client connected! ',socket.id);
 
-      // new socket object.
       z._sockets[socket.id] = model('socket',{socket:socket});
-      // new member object.
-      z._sockets[socket.id].set('member',model('member'));
+      z._sockets[socket.id].set('member', model('member'));
       z._sockets[socket.id].save(function(err,data){
-        // who am i.
-        socket.emit('id',data.id);
+        socket.emit('id', data.id);
       });
 
-      socket.on('disconnect',function(){
-        z.emit('disconnect',socket.id);
-        delete z.sockets[socket.id];
+      socket.on('disconnect', function() {
+        z.emit('disconnect', socket.id);
+
+        var socketRoomId = z._sockets[socket.id].get('room');
+        if(socketRoomId) {
+          var room = z._rooms.findRoom(socketRoomId);
+          if(room) {
+            room.removeMember(z._sockets[socket.id].get('id'));
+          }
+        }
+
+        delete z._sockets[socket.id];
       });
 
-      socket.on('createroom',function(data,cb){
-        var room = model('room',data);
-        room.set('director',z._sockets[socket.id].id);
-        room.set('members',[z._sockets[socket.id].id]);
-        room.save(function(err,data){
-          // generates id. not really persisted yet.
-          if(cb) cb(err,data);
-          if(!err) z._rooms.push('rooms',room);
-
-        });
+      socket.on('createroom', function(data, cb) {
+        z.createRoom(socket, data, cb);
       });
 
-      z.emit('connection',z._sockets[socket.id]);
+      socket.on('joinroom', function(data,cb) {
+        var room = z._rooms.findRoom(data.id);
+        if(room) {
+          room.push('members', z._sockets[socket.id].get('id'));
+          if(room.get('director') === undefined) {
+            room.set('director', z._sockets[socket.id].get('id'));
+          }
+          room.save();
+
+          // Update the user's room.
+          z._sockets[socket.id].set('room', room.get('id'));
+
+          console.log('Added user to existing room: ', room);
+        } else {
+          var newRoomId = z.createRoom(socket, data, cb);
+
+          console.log('Added user to new room: ', newRoomId);
+        }
+      });
+
+      z.emit('connection', z._sockets[socket.id]);
     });
   };
 
-  em.observeRooms = function(){
-    var z = this;
-    z._rooms.on('push',function(key,data,values){
-      if(key == 'rooms') {
-        
-        // remove director from any current rooms.
-        // emit data to
-        values.forEach(function(room){
-          if(room.get('id') === data.get('id')) return;
-          if(room.get('director') === data.get('director')) {
-            // if my director has joined another room i have to make another member the director or deactivate the room.
-            var members = room.get('members');
-            var director;
-            members.forEach(function(id,i){
-              if(id === data.get('id')) director = i
-            });
+  em.createRoom = function(socket, data, cb) {
+    var room = model('room', data),
+        socketModel = em._sockets[socket.id];
 
-            if(director !== undefined) {
-              members.splice(i,1);
-              //EMIT MEMBERS
-              room.set('members',members);
-            }
-            //EMIT DIRECTOR
-            room.set('director',members[0]);
-            room.save();//
+    room.set('director', socketModel.get('id'));
+    room.set('members', [socketModel.get('id')]);
+
+    room.save(function(err, data) {
+      if(cb) {
+        cb(err,data);
+      }
+      if(!err) {
+        em._rooms.push('rooms', room);
+
+        // Remove director from any current rooms.
+        em._rooms.get('rooms').forEach(function(otherRoom) {
+          if(room.get('id') === otherRoom.get('id')) {
+            return;
+          }
+
+          if(room.get('director') === otherRoom.get('director')) {
+            otherRoom.removeMember(otherRoom.get('director'));
           }
         });
-
-        // EMIT THE NEW ROOM
-        z.sockets.emit('room',room.getData());
-        
       }
-      
     });
+
+    // Update the socket's current room.
+    socketModel.set('room', room.get('id'));
+
+    return room.get('id');
   };
 
   em.observeSelf = function(){
     var z = this;
-    z.on('disconnect',function(){
-      //z.app.socketsbroadcast('logout')
+    z.on('disconnect', function() {
       console.log('socket disconnected');
     });
   };
@@ -147,12 +160,11 @@ module.exports = function(config){
 
   em.app = app;
   em.observeSelf();
-  em.observeRooms();
   em.routes();
   em.sockets();
 
   changesbus.on('change',function(ev,model){
-    console.log(ev,' on ',model.type,model.get('id'));
+    //console.log(ev,' on ',model.type,model.get('id'));
   });
 
   return em;

@@ -2,16 +2,127 @@
 <html>
   <head>
     <title>WebRTC Demo</title>
+    <style>
+        .video-boxes {
+            height: 240px;
+            width: 660px;
+        }
+
+        .video-box {
+            width: 320px;
+            height: 240px;
+            border: 1px solid black;
+        }
+
+        .video-box-local {
+            float: left;
+        }
+
+        .video-box-remote {
+            float: right;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        var socket = io.connect("http://localhost");
-        socket.on('test_event', function(data) {
-            console.log(data);
+        var socket = io.connect("http://localhost"),
+            serverPeerConnections = {},
+            clientPeerConnection = null;
+
+        socket.on('become_server', function handleBecomeServer(data) {
+            serverPeerConnections = {};
+            clientPeerConnection = null;
+
+            if(data && data.connectionIds) {
+                for(var i = 0; i < data.connectionIds.length; i++) {
+                    var connectionId = data.connectionIds[i];
+                    serverPeerConnections[connectionId] = createPeerConnection();
+                }
+            }
+
+            socket.emit('server_ready', {
+                'connectionIds': data.connectionIds
+            });
         });
+
+        socket.on('switch_to_server', function handleSwitchToServer(data) {
+            serverPeerConnections = {};
+            clientPeerConnection = createPeerConnection();
+
+            clientPeerConnection.createOffer(function onCreateOffer(sessionDescription) {
+                clientPeerConnection.setLocalDescription(sessionDescription);
+                socket.emit('offer', JSON.stringify(sessionDescription));
+            }, null, {"has_video": true, "has_audio": true});
+        });
+
+        socket.on('offer', function handleOffer(data) {
+            if(data.connectionId && serverPeerConnections[data.connectionId]) {
+                serverPeerConnections[data.connectionId].setRemoteDescription(new RTCSessionDescription(data));
+                serverPeerConnections[data.connectionId].createAnswer(function onCreateAnswer(sessionDescription) {
+                    serverPeerConnections[data.connectionId].setLocalDescription(sessionDescription);
+                    socket.emit('answer', JSON.stringify(sessionDescription));
+                });
+            }
+        });
+
+        socket.on('answer', function handleAnswer(data) {
+            clientPeerConnection.setRemoteDescription(new RTCSessionDescription(data));
+        });
+
+        socket.on('candidate', function onCandidate(data) {
+            var iceCandidate = new RTCIceCandidate({
+                sdpMLineIndex: data.label,
+                candidate: data.candidate
+            });
+
+            if(clientPeerConnection) {
+                clientPeerConnection.addIceCandidate(iceCandidate);
+            } else if(data.connectionId && serverPeerConnections[data.connectionId]) {
+                serverPeerConnections[data.connectionId].addIceCandidate(iceCandidate);
+            }
+        });
+
+        function createPeerConnection() {
+            var peerConnection = new webkitRTCPeerConnection({
+                "iceServers": [{"url": "stun:stun.l.google.com:19302"}]
+            });
+            peerConnection.onicecandidate = function onIceCandidate(event) {
+                if(event.candidate) {
+                    socket.emit('candidate', {
+                        type: 'candidate',
+                        label: event.candidate.sdpMLineIndex,
+                        id: event.candidate.sdpMid,
+                        candidate: event.candidate.candidate
+                    });
+                }
+            };
+        }
+
+        function userMediaSuccess(stream) {
+            document.getElementById('local').src = webkitURL.createObjectURL(stream);
+        }
+
+        function userMediaError(error) {
+            console.log("Failed calling getUserMedia: " + error.code + ".");
+        }
+
+        navigator.webkitGetUserMedia({"video": true, "audio": true}, userMediaSuccess, userMediaError);
+        socket.emit('joinroom', {id: 'chris'});
     </script>
   </head>
   <body>
-    media js!!!
+    <div class="video-boxes">
+        <div id="local-box" class="video-box video-box-local">
+            <video id="local" autoplay="autoplay" />
+        </div>
+        <div id="remote-box" class="video-box video-box-remote">
+            <video id="remote" />
+        </div>
+    </div>
     <script src="/media.js"></script>
   </body>
 </html>
