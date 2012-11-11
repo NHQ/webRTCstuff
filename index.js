@@ -76,13 +76,23 @@ module.exports = function(config){
         memberid = cookies['clever-sid'];
       }
 
-      //persist.getMemberById(memberid)
-      var member = model('member');
-      member.save(function(err,model){
-        console.log('auth member save');
-        if(err) return cb('sorry we had an issue generating a new membership',false)
-        data.member = member;
-        cb(null,true);
+      persist.getMember(memberid,function(err,member){
+        if(err) console.log('PERSIST error getMemberById ',err);
+        if(member) {
+          // can check if another socket is still this person
+          data.member = member;
+          return cb(null,true);
+        }
+
+        member = model('member');
+        member.save(function(err,model){
+          console.log('auth member save');
+          if(err) return cb('sorry we had an issue generating a new membership',false)
+
+          data.member = member;
+          cb(null,true);
+
+        });
 
       });
     }; 

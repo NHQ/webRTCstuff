@@ -13,28 +13,29 @@ module.exports = function(config){
     var socket = window.socket = io.connect('http://'+window.location.host);
 
     
-    socket.on('connected',function(id){
+    socket.on('connected',function(data){
+
+      var id = data.id;
 
       console.log('id EVENT ',id);
 
       var orig = helper.cookie('clever-sid');
 
-      console.log('getting cleveer sid cookie ',orig);
-
-      console.log('got id ',id,' had id ',orig);
+      console.log('member: ',id);
       
       var res = helper.cookie('clever-sid',id,1000*60*60*24);
-      console.log('called set cookie ',res);
 
       try{
-        ui.init(socket);
+
+        ui.init(socket,data);
+
       } catch (e){
+
         console.log('oh no couldnt init the ui! ',e);
+
       }
 
     });
-
-    socket.emit('hi');
 
   }
 
