@@ -103,7 +103,7 @@ module.exports = function(config){
       z._sockets[socket.id].set('member', socket.handshake.member);
       z._sockets[socket.id].save(function(err,data) {
 
-        socket.emit('connected', socket.handshake.member.get('id') );
+        socket.emit('connected', {rooms:modelData(z,_rooms.get('rooms')),id:socket.handshake.member.get('id')});
 
         // Prompt them to join a room.
         if(!z._sockets[socket.id].get('room')) {
@@ -192,17 +192,28 @@ module.exports = function(config){
         console.log('server_ready', data);
 
         // This means a video server client has prepared the PeerConnections for the rest of the room users.
-        var socketRoom = z._rooms.findRoom(z._sockets[socket.id].get('room'));
-        if(socketRoom) {
-          var serverMemberId = z._sockets[socket.id].get('id');
-          socketRoom.get('members').forEach(function(memberId) {
-            if(memberId != serverMemberId) {
-              var memberSocket = z.getSocketBySocketMemberId(memberId);
-              if(memberSocket !== null) {
-                memberSocket.get('socket').emit('switch_to_server', {id: serverMemberId});
+        if(data.connectionIds) {
+          var socketRoom = z._rooms.findRoom(z._sockets[socket.id].get('room'));
+          if(socketRoom) {
+            var serverMemberId = z._sockets[socket.id].get('id');
+            socketRoom.get('members').forEach(function(memberId) {
+              if(memberId != serverMemberId) {
+                var inReadyConnections = false;
+                for(var i = 0; i < data.connectionIds.length; i++) {
+                  if(data.connectionIds[i] == memberId) {
+                    inReadyConnections = true;
+                    break;
+                  }
+                }
+                if(inReadyConnections) {
+                  var memberSocket = z.getSocketBySocketMemberId(memberId);
+                  if(memberSocket !== null) {
+                    memberSocket.get('socket').emit('switch_to_server', {id: serverMemberId});
+                  }
+                }
               }
-            }
-          });
+            });
+          }
         }
       });
 
@@ -367,4 +378,11 @@ function bundle(js,module,config){
     bundle.bundles[js] = out;
   }
   return out; 
+}
+
+// dump an array of model's data objects
+function modelData(models){
+  return models.map(function(model){
+    return model.getData();
+  });
 }
