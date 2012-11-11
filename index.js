@@ -6,6 +6,7 @@ var  tako = require('tako')
 , fs = require('fs')
 , EventEmitter = require('events').EventEmitter
 , model = require('./lib/models')
+, changesbus = require('./lib/changesbus')
 ;
 
 
@@ -149,6 +150,10 @@ module.exports = function(config){
   em.observeRooms();
   em.routes();
   em.sockets();
+
+  changesbus.on('change',function(ev,model){
+    console.log(ev,' on ',model.type,model.get('id'));
+  });
 
   return em;
 }
