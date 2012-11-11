@@ -1,11 +1,12 @@
 {
   "name": "nko3-something-clever",
-  "version": "0.0.0-7",
+  "version": "0.0.0-8",
   "description": "something clever",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "tap test/*"
+    "test": "tap test/*",
+    "postinstall": "./bin/dbdesign.js"
   },
   "repository": {
     "type": "git",
