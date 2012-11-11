@@ -8,9 +8,12 @@ module.exports = function(config){
 
   function init(){
     
-    var socket = window.socket = io.connect('http://'+window.location.host);
+    var socket = window.socket = io.connect('http://'+window.location.host+'/socket.io/socker.io.js');
 
     socket.on('connected', connected);
+
+    ui.init(socket);
+
 
   }
 
