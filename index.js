@@ -103,7 +103,7 @@ module.exports = function(config){
       z._sockets[socket.id].set('member', socket.handshake.member);
       z._sockets[socket.id].save(function(err,data) {
 
-        socket.emit('connected', {rooms:modelData(z,_rooms.get('rooms')),id:socket.handshake.member.get('id')});
+        socket.emit('connected', {rooms:modelData(z._rooms.get('rooms')),id:socket.handshake.member.get('id')});
 
         // Prompt them to join a room.
         if(!z._sockets[socket.id].get('room')) {
