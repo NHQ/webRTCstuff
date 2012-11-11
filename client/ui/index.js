@@ -21,6 +21,7 @@ var browse = document.getElementById('browse');
 var joinGame = document.getElementById('joinGame');
 var createRoom = document.getElementById('createRoom');
 var newRoomName = document.getElementById('newRoomName');
+var sockInit = false;
 
 e.updateBrowse = function(list){
   browse.options.length = 1;
@@ -35,6 +36,21 @@ e.updateBrowse = function(list){
 
 e.init = function(socket, data){
 
+    if(!sockInit){
+      sockInit = true;
+      socket.on('laffs', function(){
+        $('#laffs')[0].play()
+      });
+
+      socket.on('horn', function(){
+        $('#horn')[0].play()
+      });
+
+      socket.on('applause', function(){
+        $('#applause')[0].play()
+      })
+    };
+
     var socket = socket, data = data;
 
     $('*').unbind();
@@ -43,7 +59,7 @@ e.init = function(socket, data){
     PLAYER = window._PLAYER = {id: data.id};
     PLAYER.name = 'URSELF!';
 
-    data.rooms = [].concat({name: 'one room'}, {name: 'two room'}, {name: 'three room'});
+    data.rooms = data.rooms.length ? data.rooms : [].concat({name: 'one room'}, {name: 'two room'}, {name: 'three room'});
 
     var self = e;
 
@@ -105,6 +121,21 @@ e.init = function(socket, data){
       }
     });
 
+    $('#playLaffs').bind('click', function(){
+      socket.emit('laff');
+//      $('#laffs')[0].play()
+    });
+
+    $('#playApplause').bind('click', function(){
+      socket.emit('applause');
+//      $('#applause')[0].play()
+    });
+
+    $('#playHorn').bind('click', function(){
+      socket.emit('horn');
+//      $('#horn')[0].play()
+    });
+
     micOn.addEventListener('click', function(e){
 	socket.emit('micOn', {});
     });
@@ -140,12 +171,12 @@ e.addPlayer = function(player, cb, cb2){
   b2.type = 'submit';
   $(b1).bind('click', function(){
     socket.emit('alertPlayer', player.id);
-//      console.log(player.id);
+      //      console.log(player.id);
   });
   
   $(b2).bind('click', function(){
     socket.emit('cuePlayer', player.id);
-  //    console.log(player.id)
+  //    console.log(player.id);
   });  
   
   b2.textContent = b2.text = 'Switch to ' + player.name || 'player';
