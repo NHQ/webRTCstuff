@@ -107,6 +107,12 @@ module.exports = function(config){
       z._sockets[socket.id].save(function(err,data) {
         var socketStateData = z.getSocketsData();
         var roomStateData = modelData(z._rooms.get('rooms'));
+
+        console.log('67646535555555555%%%%%%%%%%%%%%%%% ',roomStateData.length,roomStateData);
+
+        if(roomStateData.length > 50) {
+          roomStateData = roomStateData.slice(roomStateData.length-50);
+        }
         socket.emit('connected', {rooms:roomStateData,sockets:socketStateData,id:socket.handshake.member.get('id'),member:socket.handshake.member.getData()});
 
         // Prompt them to join a room / rejoin the last room they were in.
@@ -163,7 +169,6 @@ module.exports = function(config){
       
       socket.on('create_room', function(data, cb) {
 
-        console.log('create roooomm');
 
         z.createRoom(socket, data, function(err,data){
           if(err) return cb(err+' failed to create room.');
@@ -178,7 +183,6 @@ module.exports = function(config){
         , newMemberId = z._sockets[socket.id].get('member').get('id')
         ;
 
-console.log('joining the room ',newMemberId);
 
         var gotRoom = function(room){
           console.log('gotRoom called with ',room);
@@ -217,7 +221,6 @@ console.log('joining the room ',newMemberId);
 
           if(cb) cb(null,room);
         };
-console.log('I HAVE A ROOM');
         if(room) {
 
           room.push('members', newMemberId);
@@ -379,9 +382,9 @@ console.log('I HAVE A ROOM');
 
   em.createRoom = function(socket, data, cb) {
     // IF ID IS provided look it up. dont just let anyone insert crazy ids.
-    if(data.id && data.id.indexOf('room_') !== 0) {
-      delete data.id;
-    }
+    //if(data.id && data.id.indexOf('room_') !== 0) {
+    //  delete data.id;
+    //}
 
     var room = model('room', data)
     , socketModel = em._sockets[socket.id]
@@ -396,7 +399,7 @@ console.log('I HAVE A ROOM');
 
     room.save(function(err, data) {
 
-      console.log('ROOM AVE CALLED BACK!! ',err,data);
+      //console.log('ROOM AVE CALLED BACK!! ',err,data);
 
       if(cb) {
         cb(err,room);
@@ -497,14 +500,14 @@ console.log('I HAVE A ROOM');
     var id = model.get('id');
     var type = model.type;
 
-    console.log("P: ",ev,' on ',type,id);
+    //console.log("P: ",ev,' on ',type,id);
     if(!model.dirty) {
-        console.log('the model is not dirty!');
+        //console.log('the model is not dirty!');
         return;
     }
     if(!model.get('id')) {
 
-      console.log('the model has no id!');
+      //console.log('the model has no id!');
       console.log("P: ",model.type,' has no object id yet.');
       return;
     }
@@ -513,17 +516,17 @@ console.log('I HAVE A ROOM');
       if(ev == 'set') {
         persist.setMember(model,function(err,data){
           // member was updated?
-          console.log('P: MEMBER persisted ',id,err?'ERROR':'success');//,data);
+          if(err) console.log('P: MEMBER persisted ',id,err);//,data);
         });
       }
     } else if(type == 'room'){
 
-      console.log('stype is room!!');
+      //console.log('stype is room!!');
       if(ev == 'push' || ev == 'set' || ev == 'save') {
         
         persist.setRoom(model,function(err,data){
           // member was updated?
-          console.log('P: room persisted ',id,err,data);
+          if(err) console.log('P: room persisted ',id,err,data);
         });
       }     
     }
