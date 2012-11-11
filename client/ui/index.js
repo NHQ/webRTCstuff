@@ -7,7 +7,31 @@ var midscreen = document.getElementById('midscreen');
 var director = document.getElementById('director');
 var cast = document.getElementById('cast');
 var noop = function(){};
+var submitLink  = document.getElementById('submitLink');
+var tube  = document.getElementById('tube');
+var playMusic = document.getElementById('playMusic');
+var pauseMusic = document.getElementById('pauseMusic');
+var micOn = document.getElementById('micOn');
+var micOn = document.getElementById('micOff');
+
 var e = module.exports;
+
+e.init = function(socket){
+
+    submitLink.addEventListener('click', function(e){
+	socket.emit('submitLink', tube.value);
+	console.log(tube.value);
+    })
+
+    playMusic.addEventListener('click', function(e){
+	socket.emit('playMusic');
+    })
+
+    pauseMusic.addEventListener('click', function(e){
+	socket.emit('pauseMusic');
+    })
+
+};
 
 e.addPlayer = function(player, cb, cb2){
   var div = document.createElement('div');
