@@ -1,6 +1,6 @@
 {
   "name": "nko3-something-clever",
-  "version": "0.0.0-12",
+  "version": "0.0.0-13",
   "description": "something clever",
   "main": "server.js",
   "scripts": {
@@ -24,7 +24,7 @@
     "nano": "~3.3.3",
     "domready": "~0.2.11",
     "underscore": "~1.4.2",
-    "cookie": "*"
+    "cookie": "~0.0.5"
   },
   "devDependencies": {
     "tap": "*",
