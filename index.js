@@ -180,7 +180,7 @@ module.exports = function(config){
         ;
 
         var gotRoom = function(room){
-
+          console.log('gotRoom called with ',room);
           // Tell the current video server user about the new user, if that isn't the new user.
           var currentRoomServer = room.get('server');
           if(currentRoomServer != newMemberId) {
@@ -351,7 +351,7 @@ module.exports = function(config){
   }
 
   em._socketData = function(socket){
-    var soc = _.extend({},em._sockets[socketId].getData());
+    var soc = _.extend({},socket.getData());
     soc.member = _.extend({},soc.member.getData());
     delete soc.socket;
 
@@ -375,7 +375,7 @@ module.exports = function(config){
 
     room.save(function(err, data) {
       if(cb) {
-        cb(err,data);
+        cb(err,room);
       }
       if(err) return;
 
@@ -401,6 +401,7 @@ module.exports = function(config){
 
   };
 
+//TODO -----------
   em.visitRoom = function(socket,data,cb){
     var socketModel = em._sockets[socket.id]
     , memberModel = socketModel.get('member')
