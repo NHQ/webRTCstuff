@@ -87,8 +87,26 @@ module.exports = function(config){
         if(socketRoomId) {
           var room = z._rooms.findRoom(socketRoomId);
           if(room) {
-            var memberIdToRemove = z._sockets[socket.id].get('id');
+            var memberIdToRemove = z._sockets[socket.id].get('id'),
+                previousServerMemberId = room.get('server'),
+                newServerMemberId;
             room.removeMember(memberIdToRemove);
+            newServerMemberId = room.get('server');
+
+            // The member removed was the server. Let the new server member know to start streaming for everyone else.
+            if(newServerMemberId && newServerMemberId != previousServerMemberId) {
+              var newServerMemberSocket = z.getSocketBySocketMemberId(newServerMemberId);
+              if(newServerMemberSocket !== null) {
+                var roomMembers = room.get('members'),
+                    membersExceptNewServer = [];
+                for(var i = 0; i < roomMembers.length; i++) {
+                  if(roomMembers[i] != newServerMemberId) {
+                    membersExceptNewServer.push(roomMembers[i]);
+                  }
+                }
+                newServerMemberSocket.get('socket').emit('start_server', {connectionIds: membersExceptNewServer});
+              }
+            }
 
             // Let everyone else in the room know to remove this member.
             for(var socketId in z._sockets) {
