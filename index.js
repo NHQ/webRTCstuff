@@ -135,17 +135,7 @@ module.exports = function(config){
 
             // The member removed was the server. Let the new server member know to start streaming for everyone else.
             if(newServerMemberId && newServerMemberId != previousServerMemberId) {
-              var newServerMemberSocket = z.getSocketBySocketMemberId(newServerMemberId);
-              if(newServerMemberSocket !== null) {
-                var roomMembers = room.get('members'),
-                    membersExceptNewServer = [];
-                for(var i = 0; i < roomMembers.length; i++) {
-                  if(roomMembers[i] != newServerMemberId) {
-                    membersExceptNewServer.push(roomMembers[i]);
-                  }
-                }
-                newServerMemberSocket.get('socket').emit('start_server', {connectionIds: membersExceptNewServer});
-              }
+              z.changeFeedSource(newServerMemberId);
             }
 
             // Let everyone else in the room know to remove this member.
@@ -158,6 +148,10 @@ module.exports = function(config){
         }
 
         delete z._sockets[socket.id];
+      });
+
+      socket.on('choose_feed_source', function(data, cb) {
+        z.changeFeedSource(data.connectionId);
       });
 
       // a client wants to refetch rooms.
@@ -429,6 +423,25 @@ console.log('I HAVE A ROOM');
       memberModel.set('room',room.get('id'));
     });
 
+  };
+
+  em.changeFeedSource = function(newServerMemberId) {
+    var newServerMemberSocket = em.getSocketBySocketMemberId(newServerMemberId);
+    if(newServerMemberSocket !== null) {
+      var roomId = newServerMemberSocket.get('member').get('room'),
+          room = em._rooms.findRoom(roomId);
+      if(room) {
+        var roomMembers = room.get('members'),
+            membersExceptNewServer = [];
+        for(var i = 0; i < roomMembers.length; i++) {
+          if(roomMembers[i] != newServerMemberId) {
+            membersExceptNewServer.push(roomMembers[i]);
+          }
+        }
+        console.log("Changing feed source for " + room.get('id') + " to " + newServerMemberId);
+        newServerMemberSocket.get('socket').emit('start_server', {connectionIds: membersExceptNewServer});
+      }
+    }
   };
 
 //TODO -----------
