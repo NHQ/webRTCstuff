@@ -109,8 +109,9 @@ module.exports = function(config){
         socket.emit('connected', {rooms:roomStateData,sockets:socketStateData,id:socket.handshake.member.get('id'),member:socket.handshake.member.getData()});
 
         // Prompt them to join a room / rejoin the last room they were in.
-        socket.emit('choose_room',{room:z._sockets[socket.id].get('room')});
-         
+        var oldRoom = z._sockets[socket.id].get('room')||false;
+        socket.emit('choose_room',{room:oldRoom});
+
       });
 
       socket.on('disconnect', function() {
@@ -166,6 +167,9 @@ module.exports = function(config){
 
       
       socket.on('create_room', function(data, cb) {
+
+        console.log('create roooomm');
+
         z.createRoom(socket, data, function(err,data){
           if(err) return cb(err+' failed to create room.');
           var soc = em._socketData(z._sockets[socket.id]);
@@ -199,8 +203,8 @@ console.log('joining the room ',newMemberId);
           console.log('GET MEMBERS!!! ',room.get('members'));
 
           room.get('members').forEach(function(memberId) {
-            var socket = z.getSocketBySocketMemberId(memberId);
-            var soc = em._socketData(socket);
+            var s = z.getSocketBySocketMemberId(memberId);
+            var soc = em._socketData(s);
             console.log('add_member',soc.member.id);
             socket.emit('add_member', {id:soc.member.id,socket:soc});
           });
@@ -386,7 +390,12 @@ console.log('I HAVE A ROOM');
     room.set('server', memberModel.get('id'));
     room.set('members', [memberModel.get('id')]);
 
+    console.log('ABOUT TO ROOM SAVE!!!');
+
     room.save(function(err, data) {
+
+      console.log('ROOM AVE CALLED BACK!! ',err,data);
+
       if(cb) {
         cb(err,room);
       }

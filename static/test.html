@@ -76,9 +76,10 @@
             members = [];
             updateMembersList();
 
-            if(currentRoom) {
+            
+            //if(currentRoom) {
                 socket.emit('join_room', {id: currentRoom});
-            }
+            //}
         });
 
         /*
