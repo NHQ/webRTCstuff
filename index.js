@@ -88,6 +88,7 @@ module.exports = function(config){
         member.save(function(err,model){
           if(err) return cb('sorry we had an issue generating a new membership',false)
 
+          console.log(member,model);
           data.member = member;
           cb(null,true);
 
@@ -484,21 +485,29 @@ console.log('I HAVE A ROOM');
     var type = model.type;
 
     console.log("P: ",ev,' on ',type,id);
-    if(!model.dirty) return;
+    if(!model.dirty) {
+        console.log('the model is not dirty!');
+        return;
+    }
     if(!model.get('id')) {
+
+      console.log('the model has no id!');
       console.log("P: ",model.type,' has no object id yet.');
       return;
     }
 
-    if(model.type == 'member') {
+    if(type == 'member') {
       if(ev == 'set') {
         persist.setMember(model,function(err,data){
           // member was updated?
-          console.log('P: MEMBER persisted ',id,err,data);
+          console.log('P: MEMBER persisted ',id,err?'ERROR':'success');//,data);
         });
       }
-    } else if(model.type == 'room'){
+    } else if(type == 'room'){
+
+      console.log('stype is room!!');
       if(ev == 'push' || ev == 'set' || ev == 'save') {
+        
         persist.setRoom(model,function(err,data){
           // member was updated?
           console.log('P: room persisted ',id,err,data);
