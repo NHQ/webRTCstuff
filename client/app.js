@@ -12,6 +12,7 @@ module.exports = function(config){
      
     var socket = window.socket = io.connect('http://'+window.location.host);
 
+    media(socket);
     
     socket.on('connected',function(data){
 
