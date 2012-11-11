@@ -9,6 +9,7 @@ var  tako = require('tako')
 , model = require('./lib/models')
 , changesbus = require('./lib/changesbus')
 , cookie = require('cookie')
+, _ = require('underscore')
 ;
 
 
@@ -100,10 +101,13 @@ module.exports = function(config){
       z._sockets[socket.id] = model('socket',{socket:socket});
       z._sockets[socket.id].set('member', socket.handshake.member);
       z._sockets[socket.id].save(function(err,data) {
-
-        socket.emit('connected', {rooms:modelData(z._rooms.get('rooms')),id:socket.handshake.member.get('id')});
+        var socketStateData = z.getSocketsData();
+        var roomStateData = modelData(z._rooms.get('rooms'));
+        console.log(socketStateData);
+        socket.emit('connected', {rooms:roomStateData,sockets:socketStateData,id:socket.handshake.member.get('id')});
 
         // Prompt them to join a room.
+        // the member.get('data') key can persist their room
         if(!z._sockets[socket.id].get('room')) {
           socket.emit('choose_room');
         }
@@ -303,6 +307,17 @@ module.exports = function(config){
     }
     return socket;
   };
+
+  em.getSocketsData = function(){
+    var data = [];
+    for(var socketId in em._sockets) {
+      var soc = _.extend({},em._sockets[socketId].getData());
+      soc.member = soc.member.getData();
+      delete soc.socket;
+      data.push(soc);
+    } 
+    return data; 
+  }
 
   em.createRoom = function(socket, data, cb) {
     var room = model('room', data),
