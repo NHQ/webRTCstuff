@@ -18,7 +18,7 @@
       </fieldset>    
     </div>
 
-    <div class="coverAll hide">
+    <div class="coverAll hide" id="coverAll">
        <h1>UR ON THE AIR</h1>
        <h3>LOOK AT THE CAMERA</h3>
     </div>
@@ -49,6 +49,12 @@
 	       <button type="submit" id="pauseMusic">PAUSE</button>
 	   </fieldset>
 	   <fieldset>
+	     <legend>PLAY LAFF & APPLAUSE TRACKS</legend>
+	       <button type="submit" id="playLaffs">LAFFS</button>
+	       <button type="submit" id="playApplause">APPLAUSE</button>
+	       <button type="submit" id="playHorn">HORN</button>
+	   </fieldset>
+	   <fieldset class="hide">
 	     <legend>Toggle Your Audio On/Off Air</legend>
 	       <input type="radio" name="mic" id="micOn"><label for="micOn">MIC ON AIR</label></button>
 	       <input type="radio" name="mic" id="micOff" checked="true"><label for="micOff">MIC OFF</label></button>
@@ -68,6 +74,10 @@
       </div>
 
     </div>
+
+    <audio id="laffs" src="/static/laff.mp3"></audio>
+    <audio id="applause" src="/static/applause.mp3"></audio>
+    <audio id="horn" src="/static/horny.mp3"></audio>
 
   </body>
   <script type="text/javascript" src="/static/jquery.js"></script>
