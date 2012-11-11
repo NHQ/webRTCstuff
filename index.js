@@ -244,7 +244,7 @@ console.log('I HAVE A ROOM');
 
         } else {
           console.log('im going ot create a room')
-          z.createRoom(socket, {title:data.title||data.name,description:data.description}, function(err,room){
+          z.createRoom(socket, {director:newMemberId,server:newMemberId,title:data.title||data.name,description:data.description}, function(err,room){
 
             console.log('Added user to new room: ', room);
             if(err) cb(err+' failed to create room to join.');
@@ -325,14 +325,21 @@ console.log('I HAVE A ROOM');
           var serverMemberId = socketRoom.get('server');
           if(serverMemberId) {
             var socketMemberId = z._sockets[socket.id].get('member').get('id');
+
+            console.log(serverMemberId,'< server member id: socket member id>',socketMemberId,'connection id',data.connectionId);
+          
             if(serverMemberId == socketMemberId) {
               var clientSocket = z.getSocketBySocketMemberId(data.connectionId);
+              console.log('have client socket? ',clientSocket);
               if(clientSocket !== null) {
                 delete data.connectionId;
                 clientSocket.get('socket').emit('candidate', data);
               }
             } else if(serverMemberId != socketMemberId) {
               var serverSocket = z.getSocketBySocketMemberId(serverMemberId);
+
+              console.log('have server!!! socket? ',serverSocket);
+
               if(serverSocket !== null) {
                 data.connectionId = socketMemberId;
                 serverSocket.get('socket').emit('candidate', data);
