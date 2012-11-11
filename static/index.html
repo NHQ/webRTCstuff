@@ -8,27 +8,53 @@
  
   <body>
    <div class="context">
-    <div id="viewer">
-      <video id="" class="bigscreen" controls>
-        <source src="demo.mp4" type='video/mp4'>
-        <source src="demo.webm" type='video/webm'>
-      </video>
-    </div>
 
-    <div id="director">
-      <div class="players">
-      </div>
-      <div class="dirControls">
-      </div>
-    </div>
+     <div class="video">
+       <video id="bigscreen" class="bigscreen screen brdr hide" src="">
+       </video>
+       <video id="midscreen" class="midscreen screen brdr " src="">
+       </video>
+       <video id="" class="smallscreen screen hide" src="">
+       </video>
 
-    <div id="player">
-      <div class="onair red">
-      </div>
+       <div class="largechat brdr" id="largechat">
+         <div class="chatlog"></div>
+         <div class="input"></div>
+         <p id="chatkey", contenteditable="true"></p>
+       </div>
+
+       <div class="director brdr" id="director">
+         <div class="controls">
+         </div>
+       </div>
+
+     </div>
+
+     <div class="sidebar brdr" id="sidebar">
+
+       <div class="cast brdr hide" id="cast">
+         <ul class="players">
+         </ul>
+       </div>
+
+       <div class="smallchat" id="smallchat">
+         <div class="chatlog"></div>
+         <div class="input"></div>
+         <p id="chatkey", contenteditable="true"></p>
+       </div>
+ 
     </div>
+ 
+     <div class="onair red" id="onair">
+     </div>
+
+  </div>
+
+
    </div>
-    <script type="text/javascript" src="/client.js"></script>
-    <script type="text/javascript" src="/socket.io/socket.io.js"></script>
   </body>
+  <script type="text/javascript" src="/static/jquery.js"></script>
+  <script type="text/javascript" src="/client.js"></script>
+  <script type="text/javascript" src="/socket.io/socket.io.js"></script>
 
 </html>

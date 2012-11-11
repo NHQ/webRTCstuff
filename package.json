@@ -1,11 +1,11 @@
 {
   "name": "nko3-something-clever",
-  "version": "0.0.0-6",
+  "version": "0.0.0-7",
   "description": "something clever",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test":"tap test/*"
+    "test": "tap test/*"
   },
   "repository": {
     "type": "git",
@@ -17,16 +17,17 @@
     "socket.io": "~0.9.11",
     "confuse": "~0.0.1",
     "oppressor": "~0.0.1",
-    "node-uuid":"~1.4.0",
-    "mime":"~1.2.7",
-    "knox":"~0.4.1",
-    "nano":"~3.3.3",
-    "domready":"~0.2.11",
-    "underscore":"*"
+    "node-uuid": "~1.4.0",
+    "mime": "~1.2.7",
+    "knox": "~0.4.1",
+    "nano": "~3.3.3",
+    "domready": "~0.2.11",
+    "underscore": "~1.4.2",
+    "semver": "~1.1.0"
   },
-  "devDependencies":{
-    "tap":"*",
-    "watch":"*"
+  "devDependencies": {
+    "tap": "*",
+    "watch": "*"
   },
   "engines": {
     "node": "0.8.x"

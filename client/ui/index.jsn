@@ -1,0 +1,57 @@
+var onair = document.getElementById('onair');
+var bigscreen = document.getElementById('bigscreen');
+var smallchat = document.getElementById('smallchat');
+var largechat = document.getElementById('largechat');
+var sidebar = document.getElementById('sidebar');
+var midscreen = document.getElementById('midscreen');
+var director = document.getElementById('director');
+var cast = document.getElementById('cast');
+
+var e = module & module.exports
+
+e.showCast = function(){
+    cast.classList.remove('hide');
+};
+
+e.hideCast = function(){
+    cast.classList.add('hide');
+};
+
+e.hideDirector = function(){
+    director.classList.add('hide');
+};
+
+e.showDirector = function(){
+    director.classList.remove('hide');
+};
+
+e.showBigScreen = function(){
+    bigscreen.classList.remove('hide');
+    midscreen.classList.add('hide');
+};
+
+e.showMidScreen = function(){
+    bigscreen.classList.add('hide');
+    midscreen.classList.remove('hide');
+};
+
+e.showSidebar = function(){
+    sidebar.classList.remove('hide');
+};
+
+e.hideSidebar = function(){
+    sidebar.classList.add('hide');
+};
+
+e.hideLargeChat = function(){
+    largechat.classList.add('hide');
+};
+
+e.showLargeChat = function(){
+    largechat.classList.remove('hide');
+};
+
+e.offair = function(){
+    var c = onair.classList;
+    c.add('hide');
+};
