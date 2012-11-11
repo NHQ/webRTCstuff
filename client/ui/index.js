@@ -13,10 +13,56 @@ var playMusic = document.getElementById('playMusic');
 var pauseMusic = document.getElementById('pauseMusic');
 var micOn = document.getElementById('micOn');
 var micOn = document.getElementById('micOff');
+var which = document.getElementById('which');
+var browse = document.getElementById('browse');
+
+
 
 var e = module.exports;
 
+e.updateBrowse = function(list){
+  browse.options.length = 1;
+  list.forEach(function(e, i){
+    var option = document.createElement('option');
+    option.val = e.url;
+    option.text = e.name;
+    browse.add(option, null);
+  });
+}
+
 e.init = function(socket){
+
+    var self = e;
+    
+
+    // when the browse select is clicked, call the server with a 'browse' ping, get a 'browseResults' back
+    browse.addEventListener('click', function(e){
+      socket.once('browseResults', self.updateBrowse);
+      socket.emit('browse');
+    });
+
+    which.addEventListener('click', function(e){
+      if(which.value == 'view'){
+	window._SELF = 'view';
+	self.showBigScreen();
+	self.hideSideBar();
+//	self.hideDirector();
+//	self.showComment();
+      };
+      else{
+	window._SELF = 'play';
+	self.showMidScreen();
+	self.showSideBar();
+      }
+    })
+
+    micOn.addEventListener('click', function(e){
+	socket.emit('micOn', {});
+    });
+
+    micOff.addEventListener('click', function(e){
+	socket.emit('micOff', {});
+    });
 
     submitLink.addEventListener('click', function(e){
 	socket.emit('submitLink', tube.value);
