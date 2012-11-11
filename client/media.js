@@ -28,9 +28,10 @@ module.exports = function(socket){
   }
 
   socket.on('add_member', function handleAddUser(data) {
+		console.log(data)
       if(!members[data.id]) {
           members[data.id] = true;
-          updateMembersList();
+          ui.addPlayer(data)
       }
   });
 
@@ -96,10 +97,10 @@ module.exports = function(socket){
   });
 
   socket.on('switch_to_server', function handleSwitchToServer(data) {
-      console.log('Got switch_to_server.');
+      console.log('Got switch_to_server!!', data);
 
       serverPeerConnections = {};
-      clientPeerConnection = createPeerConnection();
+      clientPeerConnection = createPeerConnection(data.id);
       clientPeerConnection.onaddstream = function(event) {
           console.log('Got onaddstream.');
           document.getElementById('midscreen').src = webkitURL.createObjectURL(event.stream);

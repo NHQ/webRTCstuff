@@ -36,6 +36,8 @@ e.updateBrowse = function(list){
 
 e.init = function(socket, data){
 
+	console.log(data)
+
     if(!sockInit){
       sockInit = true;
       socket.on('laffs', function(){
@@ -64,19 +66,9 @@ e.init = function(socket, data){
     var self = e;
 
     $(createRoom).bind('click', function(){
-      socket.emit('join_room', newRoomName.value || 'NO NAME DUH', function(data){
-	  midscreen.src = bigscreen.src;
-	  if(CAST.length){
-  	    window._CAST.forEach(function(p){
-  	      var el = e.removePlayer(p.el);
-	    });
-	    CAST = [];
-	  };
-	  e.showMidScreen();
+      e.showMidScreen(
+	);
 	  e.showSidebar();
-	  e.addPlayer(PLAYER, bigscreen.src);
-	  alert('YOUR ARE THE DIRECTOR OF THIS ROOM');
-      }); 
     });
 
     $(joinGame).bind('click', function(){
@@ -172,14 +164,14 @@ e.addPlayer = function(player, src, cb, cb2){
   b1.type = 'submit';
   b2.type = 'submit';
   $(b1).bind('click', function(){
-    socket.emit('alertPlayer', player.id);
+    socket.emit('choose_feed_source', {"connectionId" : player.id});
   });
   
   $(b2).bind('click', function(){
-    socket.emit('chose_feed_source', {"connectionId" : player.id});
+    socket.emit('choose_feed_source', {"connectionId" : player.id});
   });  
   
-  b2.textContent = b2.text = 'Switch to ' + player.name || 'player';
+  b2.textContent = b2.text = 'Switch to ' + player.id || 'player';
   b1.textContent = b1.text = 'Alert';
   cast.appendChild(div);
   div.appendChild(vid);
