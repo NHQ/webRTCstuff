@@ -7,10 +7,16 @@ module.exports = function(config){
   domready(init);
 
   function init(){
-
-    var origin = window.location.host.match('localhost') ? '127.0.0.1' : window.location.host
     
-    var socket = window.socket = io.connect('http://'+origin + ':8000');
+    var socket = window.socket = io.connect('http://'+window.location.host);
+
+    socket.on('connected', connected);
+
+  }
+
+  function connected(){
+    log('connected');
+  }
 
   };
 
