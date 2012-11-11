@@ -166,55 +166,80 @@ module.exports = function(config){
 
       
       socket.on('create_room', function(data, cb) {
-        var room = z.createRoom(socket, data, cb);
-        socket.emit('add_member', {id: z._sockets[socket.id].get('member').get(id)});
+        z.createRoom(socket, data, function(err,data){
+          if(err) return cb(err+' failed to create room.');
+          var soc = em._socketData(z._sockets[socket.id]);
+          socket.emit('add_member', {id:soc.member.id,socket:soc});
+        });
       });
 
       socket.on('join_room', function(data, cb) {
+
         var room = z._rooms.findRoom(data.id)
         , newMemberId = z._sockets[socket.id].get('member').get('id')
         ;
 
+        var gotRoom = function(room){
+
+          // Tell the current video server user about the new user, if that isn't the new user.
+          var currentRoomServer = room.get('server');
+          if(currentRoomServer != newMemberId) {
+            var roomServerSocket = z.getSocketBySocketMemberId(currentRoomServer);
+            if(roomServerSocket !== null) {
+              roomServerSocket.get('socket').emit('start_server', {connectionIds: [newMemberId]});
+            }
+          }
+
+          // Let the new user know about everyone.
+          room.get('members').forEach(function(memberId) {
+            var socket = z.getSocketBySocketMemberId(memberId);
+            var soc = em._socketData(socket);
+            socket.emit('add_member', {id:soc.member.id,socket:soc});
+          });
+
+          // Let the existing users each know about the new user.
+          var mySocInfo = em._socketData(z._sockets[socket.id]);
+
+          for(var socketId in z._sockets) {
+            if(z._sockets[socketId].get('room') == room.get('id')) {
+
+              z._sockets[socketId].get('socket').emit('add_member', {id:mySocInfo.member.id,socket:mySocInfo});
+
+            }
+          }
+
+          if(cb) cb(null,room);
+        };
+
         if(room) {
+
           room.push('members', newMemberId);
           if(!room.get('director')) {
             room.set('director', newMemberId);
           }
+
           if(!room.get('server')) {
             room.set('server', newMemberId);
           }
-          room.save();
 
           // Update the user's room.
           z._sockets[socket.id].set('room', room.get('id'));
           z._sockets[socket.id].get('member').set('room', room.get('id'));
 
           console.log('Added user to existing room: ', room);
+
+          gotRoom(room);
+
         } else {
-          room = z.createRoom(socket, data, cb);
+          z.createRoom(socket, {title:data.title||data.name,description:data.description}, function(err,room){
 
-          console.log('Added user to new room: ', room);
-        }
+            console.log('Added user to new room: ', room);
+            if(err) cb(err+' failed to create room to join.');
+            gotRoom(room);
 
-        // Tell the current video server user about the new user, if that isn't the new user.
-        var currentRoomServer = room.get('server');
-        if(currentRoomServer != newMemberId) {
-          var roomServerSocket = z.getSocketBySocketMemberId(currentRoomServer);
-          if(roomServerSocket !== null) {
-            roomServerSocket.get('socket').emit('start_server', {connectionIds: [newMemberId]});
-          }
+          });
         }
-
-        // Let the new user know about everyone.
-        room.get('members').forEach(function(memberId) {
-          socket.emit('add_member', {id: memberId});
-        });
-        // Let the existing users each know about the new user.
-        for(var socketId in z._sockets) {
-          if(z._sockets[socketId].get('room') == room.get('id')) {
-            z._sockets[socketId].get('socket').emit('add_member', {id: newMemberId});
-          }
-        }
+        
       });
 
       socket.on('server_ready', function(data, cb) {
@@ -319,19 +344,24 @@ module.exports = function(config){
 
   em.getSocketsData = function(){
     var data = [];
-    for(var socketId in em._sockets) {
-      var soc = _.extend({},em._sockets[socketId].getData());
-      soc.member = soc.member.getData();
-      delete soc.socket;
-      data.push(soc);
+    for(var socketId in em._sockets) { 
+      data.push(em._socketData(em._sockets[socketId]));
     } 
     return data; 
+  }
+
+  em._socketData = function(socket){
+    var soc = _.extend({},em._sockets[socketId].getData());
+    soc.member = _.extend({},soc.member.getData());
+    delete soc.socket;
+
+    return soc;
   }
 
   em.createRoom = function(socket, data, cb) {
     // IF ID IS provided look it up. dont just let anyone insert crazy ids.
     if(data.id && data.id.indexOf('room_') !== 0) {
-      data.id = "room_"+data.id;// tmep
+      delete data.id;
     }
 
     var room = model('room', data)
@@ -347,27 +377,28 @@ module.exports = function(config){
       if(cb) {
         cb(err,data);
       }
-      if(!err) {
-        em._rooms.push('rooms', room);
+      if(err) return;
 
-        em._rooms.get('rooms').forEach(function(otherRoom) {
-          if(room.get('id') === otherRoom.get('id')) {
-            return;
-          }
+      em._rooms.push('rooms', room);
 
-          // Remove director from any current rooms.
-          if(room.get('director') === otherRoom.get('director')) {
-            otherRoom.removeMember(otherRoom.get('director'));
-          }
-        });
-      }
+      em._rooms.get('rooms').forEach(function(otherRoom) {
+
+        if(room.get('id') === otherRoom.get('id')) {
+          return;
+        }
+
+        // Remove director from any current rooms.
+        if(room.get('director') === otherRoom.get('director')) {
+          otherRoom.removeMember(otherRoom.get('director'));
+        }
+
+      });
+      
+      // Update the socket's current room.
+      socketModel.set('room', room.get('id'));
+      memberModel.set('room',room.get('id'));
     });
 
-    // Update the socket's current room.
-    socketModel.set('room', room.get('id'));
-    memberModel.set('room',room.get('id'));
-
-    return room;
   };
 
   em.visitRoom = function(socket,data,cb){
@@ -419,16 +450,30 @@ module.exports = function(config){
   //
   var updating = {};
   changesbus.on('change',function(ev,model){
-    console.log(ev,' on ',model.type,model.get('id'));
+    var id = model.get('id');
+    var type = model.type;
+
+    console.log("P: ",ev,' on ',type,id);
     if(!model.dirty) return;
+    if(!model.get('id')) {
+      console.log("P: ",model.type,' has no object id yet.');
+      return;
+    }
 
     if(model.type == 'member') {
       if(ev == 'set') {
         persist.setMember(model,function(err,data){
           // member was updated?
-          console.log('MEMBER persisted ',err,data);
+          console.log('P: MEMBER persisted ',id,err,data);
         });
       }
+    } else if(model.type == 'room'){
+      if(ev == 'push' || ev == 'set' || ev == 'save') {
+        persist.setRoom(model,function(err,data){
+          // member was updated?
+          console.log('P: room persisted ',id,err,data);
+        });
+      }     
     }
   });
 
