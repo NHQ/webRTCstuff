@@ -100,18 +100,17 @@ module.exports = function(config){
 
       z._sockets[socket.id] = model('socket',{socket:socket});
       z._sockets[socket.id].set('member', socket.handshake.member);
+      // set the inital room to be the last room this member was in
+      z._sockets[socket.id].set('room',socket.handshake.member.get('room'));
+
       z._sockets[socket.id].save(function(err,data) {
         var socketStateData = z.getSocketsData();
         var roomStateData = modelData(z._rooms.get('rooms'));
-        console.log(socketStateData);
-        socket.emit('connected', {rooms:roomStateData,sockets:socketStateData,id:socket.handshake.member.get('id')});
+        socket.emit('connected', {rooms:roomStateData,sockets:socketStateData,id:socket.handshake.member.get('id'),member:socket.handshake.member.getData()});
 
-        // Prompt them to join a room.
-        // the member.get('data') key can persist their room
-        if(!z._sockets[socket.id].get('room')) {
-          socket.emit('choose_room');
-        }
-
+        // Prompt them to join a room / rejoin the last room they were in.
+        socket.emit('choose_room',{room:z._sockets[socket.id].get('room')});
+         
       });
 
       socket.on('disconnect', function() {
@@ -119,11 +118,16 @@ module.exports = function(config){
 
         var socketRoomId = z._sockets[socket.id].get('room');
         if(socketRoomId) {
+
           var room = z._rooms.findRoom(socketRoomId);
           if(room) {
-            var memberIdToRemove = z._sockets[socket.id].get('id'),
-                previousServerMemberId = room.get('server'),
-                newServerMemberId;
+
+            var memberModel = z._sockets[socket.id].get('member') 
+            , memberIdToRemove = memberModel.get('id')
+            , previousServerMemberId = room.get('server')
+            , newServerMemberId
+            ;
+
             room.removeMember(memberIdToRemove);
             newServerMemberId = room.get('server');
 
@@ -154,19 +158,23 @@ module.exports = function(config){
         delete z._sockets[socket.id];
       });
 
+      // a client wants to refetch rooms.
       socket.on('get_rooms',function(cb){
         if(!cb || !cb.call) return;
-        
+        cb(null,modelData(z._rooms.get('rooms')));
       });
 
+      
       socket.on('create_room', function(data, cb) {
         var room = z.createRoom(socket, data, cb);
-        socket.emit('add_member', {id: z._sockets[socket.id].get('id')});
+        socket.emit('add_member', {id: z._sockets[socket.id].get('member').get(id)});
       });
 
       socket.on('join_room', function(data, cb) {
-        var room = z._rooms.findRoom(data.id),
-            newMemberId = z._sockets[socket.id].get('id');
+        var room = z._rooms.findRoom(data.id)
+        , newMemberId = z._sockets[socket.id].get('member').get('id')
+        ;
+
         if(room) {
           room.push('members', newMemberId);
           if(!room.get('director')) {
@@ -179,6 +187,7 @@ module.exports = function(config){
 
           // Update the user's room.
           z._sockets[socket.id].set('room', room.get('id'));
+          z._sockets[socket.id].get('member').set('room', room.get('id'));
 
           console.log('Added user to existing room: ', room);
         } else {
@@ -301,7 +310,7 @@ module.exports = function(config){
   em.getSocketBySocketMemberId = function(socketMemberId) {
     var socket = null;
     for(var socketId in em._sockets) {
-      if(socketMemberId == em._sockets[socketId].get('id')) {
+      if(socketMemberId == em._sockets[socketId].get('member').get('id')) {
         socket = em._sockets[socketId];
       }
     }
@@ -320,12 +329,19 @@ module.exports = function(config){
   }
 
   em.createRoom = function(socket, data, cb) {
-    var room = model('room', data),
-        socketModel = em._sockets[socket.id];
+    // IF ID IS provided look it up. dont just let anyone insert crazy ids.
+    if(data.id && data.id.indexOf('room_') !== 0) {
+      data.id = "room_"+data.id;// tmep
+    }
 
-    room.set('director', socketModel.get('id'));
-    room.set('server', socketModel.get('id'));
-    room.set('members', [socketModel.get('id')]);
+    var room = model('room', data)
+    , socketModel = em._sockets[socket.id]
+    , memberModel = socketModel.get('member')
+    ;
+
+    room.set('director', memberModel.get('id'));
+    room.set('server', memberModel.get('id'));
+    room.set('members', [memberModel.get('id')]);
 
     room.save(function(err, data) {
       if(cb) {
@@ -334,12 +350,12 @@ module.exports = function(config){
       if(!err) {
         em._rooms.push('rooms', room);
 
-        // Remove director from any current rooms.
         em._rooms.get('rooms').forEach(function(otherRoom) {
           if(room.get('id') === otherRoom.get('id')) {
             return;
           }
 
+          // Remove director from any current rooms.
           if(room.get('director') === otherRoom.get('director')) {
             otherRoom.removeMember(otherRoom.get('director'));
           }
@@ -349,8 +365,21 @@ module.exports = function(config){
 
     // Update the socket's current room.
     socketModel.set('room', room.get('id'));
+    memberModel.set('room',room.get('id'));
 
     return room;
+  };
+
+  em.visitRoom = function(socket,data,cb){
+    var socketModel = em._sockets[socket.id]
+    , memberModel = socketModel.get('member')
+    , currentRoomId = socketModel.get('room')||memberModel.get('room')
+    , roomId = data.id
+    ;
+
+    z._rooms.forEach(function(r){
+
+    });
   };
 
   em.observeSelf = function(){
