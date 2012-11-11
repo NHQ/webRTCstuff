@@ -12,18 +12,16 @@
     "url": "git@github.com:nko3/something-clever.git"
   },
   "dependencies": {
-    "tako": "*",
-    "templar": "*",
-    "ejs": "*",
-    "browserify": "*",
-    "socket.io": "*",
-    "confuse": "*",
-    "oppressor": "*",
-    "node-uuid":"*",
+    "tako": "~0.3.0",
+    "browserify": "~1.16.3",
+    "socket.io": "~0.9.11",
+    "confuse": "~0.0.1",
+    "oppressor": "~0.0.1",
+    "node-uuid":"~1.4.0",
     "mime":"~1.2.7",
     "knox":"~0.4.1",
     "nano":"~3.3.3",
-    "domready":""
+    "domready":"~0.2.11"
   },
   "devDependencies":{
     "tap":"*",
