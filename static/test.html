@@ -31,7 +31,61 @@
     <script>
         var socket = io.connect("http://localhost"),
             serverPeerConnections = {},
-            clientPeerConnection = null;
+            clientPeerConnection = null,
+            members = [],
+            currentRoom = 'chris';
+
+        /*
+         * Members list.
+         */
+
+        function updateMembersList() {
+            var membersListHtml = '<ul>';
+            members.forEach(function(memberId) {
+                membersListHtml += '<li>' + memberId + '</li>';
+            });
+            membersListHtml += '</ul>';
+
+            document.getElementById('members-list').innerHTML = membersListHtml;
+        }
+
+        socket.on('add_member', function handleAddUser(data) {
+            console.log(data);
+            var foundMember = false;
+            members.forEach(function(memberId) {
+                if(memberId == data.id) {
+                    foundMember = true;
+                    return;
+                }
+            });
+            if(!foundMember) {
+                members.push(data.id);
+                updateMembersList();
+            }
+        });
+
+        socket.on('remove_member', function removeUser(data) {
+            var memberIndex = false;
+            members.forEach(function(memberId, i) {
+                if(memberId == data.id) {
+                    memberIndex = i;
+                    return;
+                }
+            });
+            if(memberIndex !== undefined) {
+                members.splice(memberIndex, 1);
+            }
+            updateMembersList();
+        });
+
+        socket.on('choose_room', function handleChooseRoom(data) {
+            members = [];
+            updateMembersList();
+
+            if(currentRoom) {
+                socket.emit('join_room', {id: currentRoom});
+            }
+        });
 
         socket.on('become_server', function handleBecomeServer(data) {
             serverPeerConnections = {};
@@ -111,7 +165,6 @@
         }
 
         navigator.webkitGetUserMedia({"video": true, "audio": true}, userMediaSuccess, userMediaError);
-        socket.emit('joinroom', {id: 'chris'});
     </script>
   </head>
   <body>
@@ -123,6 +176,7 @@
             <video id="remote" />
         </div>
     </div>
+    <div id="members-list"></div>
     <script src="/media.js"></script>
   </body>
 </html>

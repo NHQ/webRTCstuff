@@ -61,12 +61,16 @@ module.exports = function(config){
   em.sockets = function(){
     var z = this;
     z.app.sockets.manager.settings['log level'] = 2; 
-    z.app.sockets.on('connection',function(socket){
+    z.app.sockets.on('connection', function(socket) {
 
       z._sockets[socket.id] = model('socket',{socket:socket});
       z._sockets[socket.id].set('member', model('member'));
-      z._sockets[socket.id].save(function(err,data){
+      z._sockets[socket.id].save(function(err,data) {
         socket.emit('id', data.id);
+        // Prompt them to join a room.
+        if(!z._sockets[socket.id].get('room')) {
+          socket.emit('choose_room');
+        }
       });
 
       socket.on('disconnect', function() {
@@ -76,21 +80,31 @@ module.exports = function(config){
         if(socketRoomId) {
           var room = z._rooms.findRoom(socketRoomId);
           if(room) {
-            room.removeMember(z._sockets[socket.id].get('id'));
+            var memberIdToRemove = z._sockets[socket.id].get('id');
+            room.removeMember(memberIdToRemove);
+
+            // Let everyone else in the room know to remove this member.
+            for(var socketId in z._sockets) {
+              if(z._sockets[socketId].get('room') == room.get('id')) {
+                z._sockets[socketId].get('socket').emit('remove_member', {id: memberIdToRemove});
+              }
+            }
           }
         }
 
         delete z._sockets[socket.id];
       });
 
-      socket.on('createroom', function(data, cb) {
-        z.createRoom(socket, data, cb);
+      socket.on('create_room', function(data, cb) {
+        var room = z.createRoom(socket, data, cb);
+        socket.emit('add_member', {id: z._sockets[socket.id].get('id')});
       });
 
-      socket.on('joinroom', function(data,cb) {
-        var room = z._rooms.findRoom(data.id);
+      socket.on('join_room', function(data, cb) {
+        var room = z._rooms.findRoom(data.id),
+            newMemberId = z._sockets[socket.id].get('id');
         if(room) {
-          room.push('members', z._sockets[socket.id].get('id'));
+          room.push('members', newMemberId);
           if(room.get('director') === undefined) {
             room.set('director', z._sockets[socket.id].get('id'));
           }
@@ -101,9 +115,20 @@ module.exports = function(config){
 
           console.log('Added user to existing room: ', room);
         } else {
-          var newRoomId = z.createRoom(socket, data, cb);
+          room = z.createRoom(socket, data, cb);
 
-          console.log('Added user to new room: ', newRoomId);
+          console.log('Added user to new room: ', room);
+        }
+
+        // Let the new user know about everyone.
+        room.get('members').forEach(function(memberId) {
+          socket.emit('add_member', {id: memberId});
+        });
+        // Let the existing users each know about the new user.
+        for(var socketId in z._sockets) {
+          if(z._sockets[socketId].get('room') == room.get('id')) {
+            z._sockets[socketId].get('socket').emit('add_member', {id: newMemberId});
+          }
         }
       });
 
@@ -141,7 +166,7 @@ module.exports = function(config){
     // Update the socket's current room.
     socketModel.set('room', room.get('id'));
 
-    return room.get('id');
+    return room;
   };
 
   em.observeSelf = function(){
