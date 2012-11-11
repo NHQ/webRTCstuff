@@ -6,7 +6,7 @@ gbody, div, p, video, img, audio, h1, h2, h3, h4, a {
 body {
   width:100%;
   height:100%;
-  background-color: rgba(20,22, 40, 1);
+  background-color: #000;
   overflow:hidden;
 }
 
@@ -57,7 +57,7 @@ input[type="radio"]:checked + label{
   width: 32%;
   height: 100%;
   height:95%;
-  overflow-y:scroll;
+  overflow-y:auto;
   overflow-x:hidden;
   padding:0px 5px
 }
@@ -68,7 +68,7 @@ input[type="radio"]:checked + label{
   position:fixed;
   top:0px;
   left:0px;
-  background:yellow;
+  background:#000;
   margin:0;
   padding:0;
   color:#000
@@ -76,7 +76,7 @@ input[type="radio"]:checked + label{
 
 .topbar fieldset{
   border: none;
-  color:#303;
+  color:#f0f;
   display:inline-inline;
 }
 
@@ -87,7 +87,7 @@ input[type="radio"]:checked + label{
 }
 
 .bigscreen {
-  height:90%;
+  height:85%;
   width: 96.5%;
 }
 
