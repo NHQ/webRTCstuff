@@ -434,6 +434,8 @@ module.exports = function(config){
       var roomId = newServerMemberSocket.get('member').get('room'),
           room = em._rooms.findRoom(roomId);
       if(room) {
+        room.set('server', newServerMemberId);
+
         var roomMembers = room.get('members'),
             membersExceptNewServer = [];
         for(var i = 0; i < roomMembers.length; i++) {
