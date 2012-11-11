@@ -18,6 +18,7 @@
     },
     "db":"couch",
     "couch":{
+      "db":"somethingclever",
       "url":"http://nodejitsudb3751794886.iriscouch.com:5984"
     },
     "files":"s3",
