@@ -258,7 +258,8 @@ console.log('I HAVE A ROOM');
         if(data.connectionIds) {
           var socketRoom = z._rooms.findRoom(z._sockets[socket.id].get('room'));
           if(socketRoom) {
-            var serverMemberId = z._sockets[socket.id].get('id');
+
+            var serverMemberId = z._sockets[socket.id].get('member').get('id');
             socketRoom.get('members').forEach(function(memberId) {
               if(memberId != serverMemberId) {
                 var inReadyConnections = false;
@@ -286,7 +287,7 @@ console.log('I HAVE A ROOM');
         // Forward an offer from this client to the current server user for this client's room.
         var socketRoom = z._rooms.findRoom(z._sockets[socket.id].get('room'));
         if(socketRoom) {
-          var memberId = z._sockets[socket.id].get('id'),
+          var memberId = z._sockets[socket.id].get('member').get('id'),
               serverMemberId = socketRoom.get('server'),
               serverMemberSocket = z.getSocketBySocketMemberId(serverMemberId);
           if(memberId != serverMemberId && serverMemberSocket !== null) {
@@ -319,7 +320,7 @@ console.log('I HAVE A ROOM');
         if(socketRoom) {
           var serverMemberId = socketRoom.get('server');
           if(serverMemberId) {
-            var socketMemberId = z._sockets[socket.id].get('id');
+            var socketMemberId = z._sockets[socket.id].get('member').get('id');
             if(serverMemberId == socketMemberId) {
               var clientSocket = z.getSocketBySocketMemberId(data.connectionId);
               if(clientSocket !== null) {
