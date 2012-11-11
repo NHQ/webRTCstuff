@@ -119,8 +119,11 @@ module.exports = function(config){
             newMemberId = z._sockets[socket.id].get('id');
         if(room) {
           room.push('members', newMemberId);
-          if(room.get('director') === undefined) {
-            room.set('director', z._sockets[socket.id].get('id'));
+          if(!room.get('director')) {
+            room.set('director', newMemberId);
+          }
+          if(!room.get('server')) {
+            room.set('server', newMemberId);
           }
           room.save();
 
@@ -132,6 +135,15 @@ module.exports = function(config){
           room = z.createRoom(socket, data, cb);
 
           console.log('Added user to new room: ', room);
+        }
+
+        // Tell the current video server user about the new user, if that isn't the new user.
+        var currentRoomServer = room.get('server');
+        if(currentRoomServer != newMemberId) {
+          var roomServerSocket = z.getSocketBySocketMemberId(currentRoomServer);
+          if(roomServerSocket !== null) {
+            roomServerSocket.get('socket').emit('start_server', {connectionIds: [newMemberId]});
+          }
         }
 
         // Let the new user know about everyone.
@@ -146,8 +158,93 @@ module.exports = function(config){
         }
       });
 
+      socket.on('server_ready', function(data, cb) {
+        console.log('server_ready', data);
+
+        // This means a video server client has prepared the PeerConnections for the rest of the room users.
+        var socketRoom = z._rooms.findRoom(z._sockets[socket.id].get('room'));
+        if(socketRoom) {
+          var serverMemberId = z._sockets[socket.id].get('id');
+          socketRoom.get('members').forEach(function(memberId) {
+            if(memberId != serverMemberId) {
+              var memberSocket = z.getSocketBySocketMemberId(memberId);
+              if(memberSocket !== null) {
+                memberSocket.get('socket').emit('switch_to_server', {id: serverMemberId});
+              }
+            }
+          });
+        }
+      });
+
+      socket.on('offer', function(data, cb) {
+        console.log('offer', data);
+
+        // Forward an offer from this client to the current server user for this client's room.
+        var socketRoom = z._rooms.findRoom(z._sockets[socket.id].get('room'));
+        if(socketRoom) {
+          var memberId = z._sockets[socket.id].get('id'),
+              serverMemberId = socketRoom.get('server'),
+              serverMemberSocket = z.getSocketBySocketMemberId(serverMemberId);
+          if(memberId != serverMemberId && serverMemberSocket !== null) {
+            // Augment the data with the id of the member the offer came from, 
+            // so the server can associate it with a connection.
+            data.connectionId = memberId;
+            serverMemberSocket.get('socket').emit('offer', data);
+          }
+        }
+      });
+
+      socket.on('answer', function(data, cb) {
+        console.log('answer', data);
+
+        // Forward an answer from this server to the designated recipient.
+        if(data.connectionId) {
+          var clientSocket = z.getSocketBySocketMemberId(data.connectionId);
+          if(clientSocket !== null) {
+            delete data.connectionId;
+            clientSocket.get('socket').emit('answer', data);
+          }
+        }
+      });
+
+      socket.on('candidate', function(data, cb) {
+        console.log('candidate', data);
+
+        // Forward candidate messages to the appropriate recipient.
+        var socketRoom = z._rooms.findRoom(z._sockets[socket.id].get('room'));
+        if(socketRoom) {
+          var serverMemberId = socketRoom.get('server');
+          if(serverMemberId) {
+            var socketMemberId = z._sockets[socket.id].get('id');
+            if(serverMemberId == socketMemberId) {
+              var clientSocket = z.getSocketBySocketMemberId(data.connectionId);
+              if(clientSocket !== null) {
+                delete data.connectionId;
+                clientSocket.get('socket').emit('candidate', data);
+              }
+            } else if(serverMemberId != socketMemberId) {
+              var serverSocket = z.getSocketBySocketMemberId(serverMemberId);
+              if(serverSocket !== null) {
+                data.connectionId = socketMemberId;
+                serverSocket.get('socket').emit('candidate', data);
+              }
+            }
+          }
+        }
+      });
+
       z.emit('connection', z._sockets[socket.id]);
     });
+  };
+
+  em.getSocketBySocketMemberId = function(socketMemberId) {
+    var socket = null;
+    for(var socketId in em._sockets) {
+      if(socketMemberId == em._sockets[socketId].get('id')) {
+        socket = em._sockets[socketId];
+      }
+    }
+    return socket;
   };
 
   em.createRoom = function(socket, data, cb) {
@@ -155,6 +252,7 @@ module.exports = function(config){
         socketModel = em._sockets[socket.id];
 
     room.set('director', socketModel.get('id'));
+    room.set('server', socketModel.get('id'));
     room.set('members', [socketModel.get('id')]);
 
     room.save(function(err, data) {

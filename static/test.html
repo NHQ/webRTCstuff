@@ -32,7 +32,9 @@
         var socket = io.connect("http://localhost"),
             serverPeerConnections = {},
             clientPeerConnection = null,
-            members = [],
+            members = {},
+            localstream = null,
+            remotestream
             currentRoom = 'chris';
 
         /*
@@ -41,41 +43,29 @@
 
         function updateMembersList() {
             var membersListHtml = '<ul>';
-            members.forEach(function(memberId) {
+            for(var memberId in members) {
                 membersListHtml += '<li>' + memberId + '</li>';
-            });
+            }
             membersListHtml += '</ul>';
 
             document.getElementById('members-list').innerHTML = membersListHtml;
         }
 
         socket.on('add_member', function handleAddUser(data) {
-            console.log(data);
-            var foundMember = false;
-            members.forEach(function(memberId) {
-                if(memberId == data.id) {
-                    foundMember = true;
-                    return;
-                }
-            });
-            if(!foundMember) {
-                members.push(data.id);
+            if(!members[data.id]) {
+                members[data.id] = true;
                 updateMembersList();
             }
         });
 
         socket.on('remove_member', function removeUser(data) {
-            var memberIndex = false;
-            members.forEach(function(memberId, i) {
-                if(memberId == data.id) {
-                    memberIndex = i;
-                    return;
-                }
-            });
-            if(memberIndex !== undefined) {
-                members.splice(memberIndex, 1);
+            if(serverPeerConnections[data.id]) {
+                delete serverPeerConnections[data.id];
             }
-            updateMembersList();
+            if(members[data.id]) {
+                delete members[data.id];
+                updateMembersList();
+            }
         });
 
         socket.on('choose_room', function handleChooseRoom(data) {
@@ -87,14 +77,23 @@
             }
         });
 
-        socket.on('become_server', function handleBecomeServer(data) {
-            serverPeerConnections = {};
-            clientPeerConnection = null;
+        /*
+         * Video streaming.
+         */
+
+        socket.on('start_server', function handleBecomeServer(data) {
+            console.log('Got start_server.');
+
+            if(clientPeerConnection) {
+                serverPeerConnections = {};
+                clientPeerConnection = null;
+            }
 
             if(data && data.connectionIds) {
                 for(var i = 0; i < data.connectionIds.length; i++) {
                     var connectionId = data.connectionIds[i];
-                    serverPeerConnections[connectionId] = createPeerConnection();
+                    serverPeerConnections[connectionId] = createPeerConnection(connectionId);
+                    serverPeerConnections[connectionId].addStream(localStream);
                 }
             }
 
@@ -104,12 +103,28 @@
         });
 
         socket.on('switch_to_server', function handleSwitchToServer(data) {
+            console.log('Got switch_to_server.');
+
             serverPeerConnections = {};
             clientPeerConnection = createPeerConnection();
+            clientPeerConnection.onaddstream = function(event) {
+                setTimeout(function () {
+                    document.getElementById('remote').src = webkitURL.createObjectURL(event.stream);
+                }, 100);
+            };
+            // clientPeerConnection.onopen = function(event) {
+            //     console.log('on open', event);
+            // };
+            // clientPeerConnection.onconnecting = function(event) {
+            //     console.log('on connecting', event);
+            // };
+            // clientPeerConnection.onremovestream = function(event) {
+            //     console.log('on remove stream', event);
+            // };
 
             clientPeerConnection.createOffer(function onCreateOffer(sessionDescription) {
                 clientPeerConnection.setLocalDescription(sessionDescription);
-                socket.emit('offer', JSON.stringify(sessionDescription));
+                socket.emit('offer', sessionDescription);
             }, null, {"has_video": true, "has_audio": true});
         });
 
@@ -118,16 +133,21 @@
                 serverPeerConnections[data.connectionId].setRemoteDescription(new RTCSessionDescription(data));
                 serverPeerConnections[data.connectionId].createAnswer(function onCreateAnswer(sessionDescription) {
                     serverPeerConnections[data.connectionId].setLocalDescription(sessionDescription);
-                    socket.emit('answer', JSON.stringify(sessionDescription));
+                    sessionDescription.connectionId = data.connectionId;
+                    socket.emit('answer', sessionDescription);
                 });
             }
         });
 
         socket.on('answer', function handleAnswer(data) {
+            console.log('Got answer.');
+
             clientPeerConnection.setRemoteDescription(new RTCSessionDescription(data));
         });
 
         socket.on('candidate', function onCandidate(data) {
+            console.log('Got candidate.', data);
+
             var iceCandidate = new RTCIceCandidate({
                 sdpMLineIndex: data.label,
                 candidate: data.candidate
@@ -140,24 +160,32 @@
             }
         });
 
-        function createPeerConnection() {
+        function createPeerConnection(connectionId) {
             var peerConnection = new webkitRTCPeerConnection({
                 "iceServers": [{"url": "stun:stun.l.google.com:19302"}]
             });
             peerConnection.onicecandidate = function onIceCandidate(event) {
                 if(event.candidate) {
-                    socket.emit('candidate', {
+                    var candidateData = {
                         type: 'candidate',
                         label: event.candidate.sdpMLineIndex,
                         id: event.candidate.sdpMid,
                         candidate: event.candidate.candidate
-                    });
+                    };
+                    if(connectionId) {
+                        candidateData.connectionId = connectionId;
+                    }
+
+                    console.log('Emitting candidate.', candidateData);
+                    socket.emit('candidate', candidateData);
                 }
             };
+            return peerConnection;
         }
 
         function userMediaSuccess(stream) {
             document.getElementById('local').src = webkitURL.createObjectURL(stream);
+            localStream = stream;
         }
 
         function userMediaError(error) {
@@ -173,7 +201,7 @@
             <video id="local" autoplay="autoplay" />
         </div>
         <div id="remote-box" class="video-box video-box-remote">
-            <video id="remote" />
+            <video id="remote" autoplay="autoplay" />
         </div>
     </div>
     <div id="members-list"></div>
