@@ -66,15 +66,13 @@ module.exports = function(config){
     z.app.sockets.manager.settings['authorization'] = function(data,cb){
       console.log('handshake data ',data);
       cb(null,true);
-    }; 
+    };
 
     z.app.sockets.on('connection', function(socket) {
 
       z._sockets[socket.id] = model('socket',{socket:socket});
       z._sockets[socket.id].set('member', model('member'));
       z._sockets[socket.id].save(function(err,data) {
-        console.log('emitting the ')
-
         socket.emit('id', data.id);
         // Prompt them to join a room.
         if(!z._sockets[socket.id].get('room')) {
@@ -162,17 +160,28 @@ module.exports = function(config){
         console.log('server_ready', data);
 
         // This means a video server client has prepared the PeerConnections for the rest of the room users.
-        var socketRoom = z._rooms.findRoom(z._sockets[socket.id].get('room'));
-        if(socketRoom) {
-          var serverMemberId = z._sockets[socket.id].get('id');
-          socketRoom.get('members').forEach(function(memberId) {
-            if(memberId != serverMemberId) {
-              var memberSocket = z.getSocketBySocketMemberId(memberId);
-              if(memberSocket !== null) {
-                memberSocket.get('socket').emit('switch_to_server', {id: serverMemberId});
+        if(data.connectionIds) {
+          var socketRoom = z._rooms.findRoom(z._sockets[socket.id].get('room'));
+          if(socketRoom) {
+            var serverMemberId = z._sockets[socket.id].get('id');
+            socketRoom.get('members').forEach(function(memberId) {
+              if(memberId != serverMemberId) {
+                var inReadyConnections = false;
+                for(var i = 0; i < data.connectionIds.length; i++) {
+                  if(data.connectionIds[i] == memberId) {
+                    inReadyConnections = true;
+                    break;
+                  }
+                }
+                if(inReadyConnections) {
+                  var memberSocket = z.getSocketBySocketMemberId(memberId);
+                  if(memberSocket !== null) {
+                    memberSocket.get('socket').emit('switch_to_server', {id: serverMemberId});
+                  }
+                }
               }
-            }
-          });
+            });
+          }
         }
       });
 
