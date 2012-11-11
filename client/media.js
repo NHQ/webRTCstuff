@@ -1,6 +1,5 @@
-
-
 var serverPeerConnections = {},
+ui = require('./ui'),
 clientPeerConnection = null,
 members = {},
 localStream = null,
@@ -25,7 +24,7 @@ module.exports = function(socket){
       }
       membersListHtml += '</ul>';
 
-      document.getElementById('members-list').innerHTML = membersListHtml;
+//      document.getElementById('members-list').innerHTML = membersListHtml;
   }
 
   socket.on('add_member', function handleAddUser(data) {
@@ -154,7 +153,7 @@ module.exports = function(socket){
   }
 
   function userMediaSuccess(stream) {
-      document.getElementById('local').src = webkitURL.createObjectURL(stream);
+      document.getElementById('bigscreen').src = webkitURL.createObjectURL(stream);
       localStream = stream;
   }
 
