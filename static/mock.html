@@ -8,23 +8,27 @@
  
   <body>
     <div class="topbar">
-      <fieldset>I want to 
-	<select id="which">
-	  <option value="play">play</option>
-	  <option value="view">watch</option>
-	</select> 
+      <fieldset>
 	<select id="browse">
-	  <option value="">Join or Watch Games</option>
-	</select>
+	  <option value="">Browse Game Rooms</option>
+	</select> Or create a new one
+	<input type="text" id="newRoomName" placeholder="Room Name"></input>
+	<button type="submit" id="createRoom">Create Room</button>
+	<button type="submit" id="joinGame">Join This Game Room</button>  Or Just Watch	
       </fieldset>    
+    </div>
+
+    <div class="coverAll hide">
+       <h1>UR ON THE AIR</h1>
+       <h3>LOOK AT THE CAMERA</h3>
     </div>
 
     <div class="context">
 
      <div class="video">
-       <video id="bigscreen" class="bigscreen screen brdr hide" src="">
+       <video id="bigscreen" class="bigscreen screen brdr" src="">
        </video>
-       <video id="midscreen" class="midscreen screen brdr " src="">
+       <video id="midscreen" class="midscreen screen hide brdr " src="">
        </video>
        <video id="" class="smallscreen screen hide" src="">
        </video>
@@ -49,58 +53,17 @@
 	       <input type="radio" name="mic" id="micOn"><label for="micOn">MIC ON AIR</label></button>
 	       <input type="radio" name="mic" id="micOff" checked="true"><label for="micOff">MIC OFF</label></button>
 	   </fieldset>
+	   <fieldset>
+	     <legend>Invite Others to Your Room</legend>
+	       <h4 style="color:">http://something-clever.nko3.jit.su/</h4>
+	   </fieldset>
          </div>
        </div>
 
      </div>
 
-      <div class="sidebar brdr" id="sidebar">
+      <div class="sidebar brdr hide" id="sidebar">
         <div class="cast" id="cast">
-       	   <div class="player">
-             <video class="screen tiny"></video><br />
-	     <button type="submit">Alert</button>
-	     <button type="submit">Switch to player</button>
-   	   </div>
-       	   <div class="player">
-             <video class="screen tiny"></video><br />
-	     <button type="submit">Alert</button>
-	     <button type="submit">Switch to player</button>
-   	   </div>
-       	   <div class="player">
-             <video class="screen tiny"></video><br />
-	     <button type="submit">Alert</button>
-	     <button type="submit">Switch to player</button>
-   	   </div>
-       	   <div class="player">
-             <video class="screen tiny"></video><br />
-	     <button type="submit">Alert</button>
-	     <button type="submit">Switch to player</button>
-   	   </div>
-       	   <div class="player">
-             <video class="screen tiny"></video><br />
-	     <button type="submit">Alert</button>
-	     <button type="submit">Switch to player</button>
-   	   </div>
-       	   <div class="player">
-             <video class="screen tiny"></video><br />
-	     <button type="submit">Alert</button>
-	     <button type="submit">Switch to player</button>
-   	   </div>
-       	   <div class="player">
-             <video class="screen tiny"></video><br />
-	     <button type="submit">Alert</button>
-	     <button type="submit">Switch to player</button>
-   	   </div>
-       	   <div class="player">
-             <video class="screen tiny"></video><br />
-	     <button type="submit">Alert</button>
-	     <button type="submit">Switch to player</button>
-   	   </div>
-       	   <div class="player">
-             <video class="screen tiny"></video><br />
-	     <button type="submit">Alert</button>
-	     <button type="submit">Switch to player</button>
-   	   </div>
         </div>
       </div>
 
