@@ -81,6 +81,20 @@ module.exports = function(socket){
       });
   });
 
+	socket.on('add_stream', function handleSwitchToServer(data) {
+//	  var user = _CAST.map(data.id)
+      clientPeerConnection = createPeerConnection();
+      clientPeerConnection.onaddstream = function(event) {
+          document.getElementById('midscreen').src = webkitURL.createObjectURL(event.stream);
+          document.getElementById('bigscreen').src = webkitURL.createObjectURL(event.stream);
+      };
+
+      clientPeerConnection.createOffer(function onCreateOffer(sessionDescription) {
+          clientPeerConnection.setLocalDescription(sessionDescription);
+          socket.emit('offer', sessionDescription);
+      }, null, {"has_video": true, "has_audio": true});
+  });
+
   socket.on('switch_to_server', function handleSwitchToServer(data) {
       console.log('Got switch_to_server.');
 
@@ -88,7 +102,8 @@ module.exports = function(socket){
       clientPeerConnection = createPeerConnection();
       clientPeerConnection.onaddstream = function(event) {
           console.log('Got onaddstream.');
-          document.getElementById('remote').src = webkitURL.createObjectURL(event.stream);
+          document.getElementById('midscreen').src = webkitURL.createObjectURL(event.stream);
+          document.getElementById('bigscreen').src = webkitURL.createObjectURL(event.stream);
       };
 
       clientPeerConnection.createOffer(function onCreateOffer(sessionDescription) {

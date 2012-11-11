@@ -65,16 +65,16 @@ e.init = function(socket, data){
 
     $(createRoom).bind('click', function(){
       socket.emit('join_room', newRoomName.value || 'NO NAME DUH', function(data){
+	  midscreen.src = bigscreen.src;
 	  if(CAST.length){
-	    console.log(CAST)
   	    window._CAST.forEach(function(p){
-  	      e.removePlayer(p.el);
+  	      var el = e.removePlayer(p.el);
 	    });
 	    CAST = [];
 	  };
 	  e.showMidScreen();
 	  e.showSidebar();
-	  e.addPlayer(PLAYER);
+	  e.addPlayer(PLAYER, bigscreen.src);
 	  alert('YOUR ARE THE DIRECTOR OF THIS ROOM');
       }); 
     });
@@ -159,7 +159,7 @@ e.init = function(socket, data){
 
 };
 
-e.addPlayer = function(player, cb, cb2){
+e.addPlayer = function(player, src, cb, cb2){
   var div = document.createElement('div');
   var vid = document.createElement('video');
   var b1 = document.createElement('button');
@@ -167,16 +167,16 @@ e.addPlayer = function(player, cb, cb2){
   div.classList.add('player');
   vid.classList.add('screen');
   vid.classList.add('tiny');
+  vid.setAttribute('autoplay', 'autoplay');
+  vid.src = src;
   b1.type = 'submit';
   b2.type = 'submit';
   $(b1).bind('click', function(){
     socket.emit('alertPlayer', player.id);
-      //      console.log(player.id);
   });
   
   $(b2).bind('click', function(){
-    socket.emit('cuePlayer', player.id);
-  //    console.log(player.id);
+    socket.emit('chose_feed_source', {"connectionId" : player.id});
   });  
   
   b2.textContent = b2.text = 'Switch to ' + player.name || 'player';
@@ -188,7 +188,7 @@ e.addPlayer = function(player, cb, cb2){
   div.id = player.id;
   player.el = div;
   CAST.push(player);
-  return div;
+  return vid;
 };
 
 e.removePlayer = function(el){
