@@ -41,14 +41,17 @@ module.exports = function(config){
     // add the bundle 
     //
     app.route('/client.js',function(req,res){
-      var out = bundle('app.js','client/app.js') 
+      var out = bundle('app.js','client/app.js');
+      res.setHeader('Content-Type','text/javascript'); 
+      res.setHeader('Expires',(new Date(0)).toString());
+
       var oppress = oppressor(req);
       oppress.pipe(res);
       oppress.end(out);
     });
 
     app.route('/media.js',function(req,res){
-      var out = bundle('media.js','media.js') 
+      var out = bundle('media.js','media.js'); 
       var oppress = oppressor(req);
       oppress.pipe(res);
       oppress.end(out);
@@ -65,21 +68,38 @@ module.exports = function(config){
     z.app.sockets.manager.settings['log level'] = 2; 
     z.app.sockets.manager.settings['authorization'] = function(data,cb){
       console.log('handshake data ',data);
-      cb(null,true);
+
+      var memberid;
+      if(data.headers.cookie){
+        var cookies = cookie.parse(data.headers.cookie);
+        console.log('found cookies in auth ',cookies);
+        memberid = cookies['clever-sid'];
+      }
+
+      //persist.getMemberById(memberid)
+      var member = model('member');
+      member.save(function(err,model){
+        console.log('auth member save');
+        if(err) return cb('sorry we had an issue generating a new membership',false)
+        data.member = member;
+        cb(null,true);
+
+      });
     }; 
 
     z.app.sockets.on('connection', function(socket) {
 
       z._sockets[socket.id] = model('socket',{socket:socket});
-      z._sockets[socket.id].set('member', model('member'));
+      z._sockets[socket.id].set('member', socket.handshake.member);
       z._sockets[socket.id].save(function(err,data) {
-        console.log('emitting the ')
 
-        socket.emit('id', data.id);
+        socket.emit('connected', socket.handshake.member.get('id') );
+
         // Prompt them to join a room.
         if(!z._sockets[socket.id].get('room')) {
           socket.emit('choose_room');
         }
+
       });
 
       socket.on('disconnect', function() {

@@ -8,13 +8,23 @@ module.exports = function(config){
   domready(init);
 
   function init(){
-    
-    var socket = window.socket = io.connect('http://'+window.location.host+'/socket.io/socker.io.js');
+    console.log('INIT CALLED!!!');
+     
+    var socket = window.socket = io.connect('http://'+window.location.host);
 
-    socket.on('id',function(id){
+    
+    socket.on('connected',function(id){
+
+      console.log('id EVENT ',id);
+
       var orig = helper.cookie('clever-sid');
+
+      console.log('getting cleveer sid cookie ',orig);
+
       console.log('got id ',id,' had id ',orig);
-      helper.cookie('clever-sid',id);
+      
+      var res = helper.cookie('clever-sid',id,1000*60*60*24);
+      console.log('called set cookie ',res);
 
       try{
         ui.init(socket);
@@ -23,6 +33,8 @@ module.exports = function(config){
       }
 
     });
+
+    socket.emit('hi');
 
   }
 
