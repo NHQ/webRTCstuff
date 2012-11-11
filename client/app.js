@@ -13,9 +13,9 @@ module.exports = function(){
 
     console.log('AHOY');
 
-    var origin = window.location.host.match('localhost') ? '127.0.0.1' : window.location.host
+    //var origin = window.location.host.match('localhost') ? '127.0.0.1' : window.location.host
     
-    window.socket = io.connect('http://'+origin + ':8000');
+    var socket = window.socket = io.connect('http://'+window.location.host);
 
     socket.on('connected', connected);
 
