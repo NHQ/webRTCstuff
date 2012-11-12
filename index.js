@@ -99,6 +99,16 @@ module.exports = function(config){
 
     z.app.sockets.on('connection', function(socket) {
 
+		socket.on('laffs', function(){
+			socket.emit('laffs')
+		});
+		socket.on('horn', function(){
+			socket.emit('horn')
+		});
+		socket.on('applause', function(){
+			socket.emit('applause')
+		});
+
       z._sockets[socket.id] = model('socket',{socket:socket});
       z._sockets[socket.id].set('member', socket.handshake.member);
       // set the inital room to be the last room this member was in

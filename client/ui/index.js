@@ -41,6 +41,7 @@ e.init = function(socket, data){
     if(!sockInit){
       sockInit = true;
       socket.on('laffs', function(){
+	console.log('laff damnit')
         $('#laffs')[0].play()
       });
 
@@ -114,7 +115,7 @@ e.init = function(socket, data){
     });
 
     $('#playLaffs').bind('click', function(){
-      socket.emit('laff');
+      socket.emit('laffs');
 //      $('#laffs')[0].play()
     });
 
