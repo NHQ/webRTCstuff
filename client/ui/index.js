@@ -38,10 +38,10 @@ e.init = function(socket, data){
 
 	console.log(data)
 
-    if(!sockInit){
+    if(true){
       sockInit = true;
       socket.on('laffs', function(){
-	console.log('laff damnit')
+     	console.log('laff damnit')
         $('#laffs')[0].play()
       });
 
