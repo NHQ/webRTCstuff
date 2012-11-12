@@ -35,7 +35,7 @@ module.exports = function(config){
     //
     // shim fake index
     //
-    var index = fs.readFileSync('./static/index.html');
+    var index = fs.readFileSync('./static/mock.html');
     app.route('/').html(index);
 
     //
