@@ -77,6 +77,9 @@ module.exports = function(socket){
           }
       }
 
+      document.getElementById('midscreen').src = webkitURL.createObjectURL(localStream);
+      document.getElementById('bigscreen').src = webkitURL.createObjectURL(localStream);
+
       socket.emit('server_ready', {
           'connectionIds': data.connectionIds
       });
@@ -97,7 +100,7 @@ module.exports = function(socket){
   });
 
   socket.on('switch_to_server', function handleSwitchToServer(data) {
-      console.log('Got switch_to_server!!', data);
+      data = data;
 
       serverPeerConnections = {};
       clientPeerConnection = createPeerConnection(data.id);
