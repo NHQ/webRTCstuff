@@ -100,13 +100,13 @@ module.exports = function(config){
     z.app.sockets.on('connection', function(socket) {
 
 		socket.on('laffs', function(){
-			socket.emit('laffs')
+			socket.broadcast.emit('laffs')
 		});
 		socket.on('horn', function(){
-			socket.emit('horn')
+			socket.broadcast.emit('horn')
 		});
 		socket.on('applause', function(){
-			socket.emit('applause')
+			socket.broadcast.emit('applause')
 		});
 
       z._sockets[socket.id] = model('socket',{socket:socket});
